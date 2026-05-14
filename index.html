@@ -374,6 +374,99 @@
   .insight-list{counter-reset:item}
   .insight-list li strong{color:white;font-weight:600}
 
+  /* ============ ANSWERS ACCORDION ============ */
+  .answers-section{margin-bottom:48px}
+  .answers-section > h3{
+    font-family:'Inter Tight',sans-serif;font-weight:700;font-size:24px;
+    letter-spacing:-.025em;margin-bottom:20px;display:flex;align-items:center;gap:14px;
+    color:white;
+  }
+  .answers-section > h3::before{
+    content:'';width:32px;height:2px;background:var(--gold);
+  }
+  .answers-section > p.intro{
+    font-size:14px;color:rgba(228,242,245,.7);margin-bottom:20px;
+    line-height:1.55;
+  }
+  .answer-pillar{
+    background:rgba(0,0,0,.38);
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:8px;margin-bottom:12px;overflow:hidden;
+    transition:border-color .25s ease;
+  }
+  .answer-pillar[open]{border-color:rgba(234,179,40,.35)}
+  .answer-pillar summary{
+    list-style:none;cursor:pointer;padding:20px 24px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    transition:background .2s ease;
+  }
+  .answer-pillar summary::-webkit-details-marker{display:none}
+  .answer-pillar summary:hover{background:rgba(255,255,255,.03)}
+  .answer-summary-left{
+    display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;
+  }
+  .answer-pillar-name{
+    font-family:'Inter Tight',sans-serif;font-weight:600;font-size:17px;
+    color:white;letter-spacing:-.015em;
+  }
+  .answer-pillar-meta{
+    font-size:12px;color:rgba(228,242,245,.6);letter-spacing:.02em;
+  }
+  .answer-summary-right{
+    display:flex;align-items:center;gap:14px;flex-shrink:0;
+  }
+  .answer-pillar-score{
+    font-family:'Inter Tight',sans-serif;font-weight:600;font-size:16px;
+    color:var(--gold);
+  }
+  .answer-pillar-score small{
+    color:rgba(228,242,245,.45);font-weight:400;font-size:12px;margin-left:2px;
+  }
+  .answer-chevron{
+    width:22px;height:22px;display:flex;align-items:center;justify-content:center;
+    color:rgba(228,242,245,.7);transition:transform .3s cubic-bezier(.2,.8,.2,1);
+  }
+  .answer-pillar[open] .answer-chevron{transform:rotate(180deg);color:var(--gold)}
+  .answer-list{
+    list-style:none;padding:0 24px 20px;margin:0;
+    border-top:1px solid rgba(255,255,255,.08);
+  }
+  .answer-item{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:14px 0;border-bottom:1px solid rgba(255,255,255,.06);
+  }
+  .answer-item:last-child{border-bottom:none}
+  .answer-text{
+    flex:1;min-width:0;font-size:13.5px;line-height:1.5;
+    color:rgba(228,242,245,.88);font-weight:400;
+  }
+  .answer-text .q-tag{
+    font-family:'Inter Tight',sans-serif;font-weight:600;
+    font-size:10.5px;color:var(--gold);letter-spacing:.05em;
+    background:rgba(0,0,0,.4);padding:2px 7px;border-radius:3px;
+    border:1px solid rgba(234,179,40,.25);margin-right:8px;
+    display:inline-block;
+  }
+  .answer-rating{
+    display:flex;align-items:center;gap:8px;flex-shrink:0;
+  }
+  .rating-dots{display:flex;gap:3px}
+  .rating-dots .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:rgba(255,255,255,.15);
+  }
+  .rating-dots .dot.filled{
+    background:var(--gold);box-shadow:0 0 6px rgba(234,179,40,.4);
+  }
+  .rating-num{
+    font-family:'Inter Tight',sans-serif;font-weight:600;font-size:14px;
+    color:white;min-width:36px;text-align:right;
+  }
+  .rating-num small{color:rgba(228,242,245,.45);font-weight:400}
+  .answer-item.unanswered .rating-num{color:rgba(228,242,245,.4)}
+  .answer-item.unanswered .answer-text{color:rgba(228,242,245,.55)}
+
   /* CTA Block */
   .cta-block{
     background:
@@ -567,6 +660,19 @@
     .insight-card h4{font-size:18px;margin-bottom:14px}
     .insight-list li{font-size:13.5px;padding:10px 0;gap:10px}
 
+    .answers-section{margin-bottom:32px}
+    .answers-section > h3{font-size:20px;margin-bottom:16px}
+    .answer-pillar summary{padding:16px 18px}
+    .answer-pillar-name{font-size:15.5px}
+    .answer-pillar-meta{font-size:11.5px}
+    .answer-pillar-score{font-size:15px}
+    .answer-list{padding:0 18px 16px}
+    .answer-item{padding:12px 0;gap:12px;flex-wrap:wrap}
+    .answer-text{font-size:13px;flex-basis:100%}
+    .answer-rating{margin-left:auto}
+    .rating-dots .dot{width:7px;height:7px}
+    .rating-num{font-size:13px;min-width:32px}
+
     .cta-block{padding:36px 24px;border-radius:10px}
     .cta-block h3{font-size:24px;margin-bottom:14px;line-height:1.15}
     .cta-block p{font-size:14.5px;margin-bottom:24px}
@@ -636,6 +742,13 @@
     .pillar-bar-score{font-size:15px}
 
     .insights{gap:14px;margin-bottom:24px}
+    .answers-section{margin-bottom:26px}
+    .answers-section > h3{font-size:18px}
+    .answer-pillar summary{padding:14px 16px}
+    .answer-pillar-name{font-size:14.5px}
+    .answer-list{padding:0 16px 14px}
+    .answer-text{font-size:12.5px}
+    .rating-num{font-size:12.5px}
     .insight-card{padding:20px 16px}
     .insight-card h4{font-size:17px}
     .insight-list li{font-size:13px;padding:9px 0;gap:8px}
@@ -761,6 +874,12 @@
         <h4>Sobre lo que puedes construir</h4>
         <ul class="insight-list" id="strength-list"></ul>
       </div>
+    </div>
+
+    <div class="answers-section">
+      <h3>Tus respuestas en detalle</h3>
+      <p class="intro">Expande cada pilar para revisar cómo evaluaste cada pregunta. Esto te da claridad sobre dónde está cada brecha específica.</p>
+      <div id="answers-accordion"></div>
     </div>
 
     <div class="cta-block">
@@ -1007,13 +1126,18 @@ submitBtn.addEventListener('click', openCompanyModal);
 
 // ============ Generación de reporte ============
 function generateReport(lead){
+  let runningQ = 0;
   const pillarScores = PILLARS.map((p, idx) => {
-    const inputs = document.querySelectorAll(`input[data-pillar="${idx}"]:checked`);
-    let sum = 0;
-    inputs.forEach(i => sum += parseInt(i.value));
+    const answers = p.questions.map((qText) => {
+      runningQ++;
+      const checked = document.querySelector(`input[name="q${runningQ}"]:checked`);
+      const value = checked ? parseInt(checked.value) : null;
+      return { idx: runningQ, text: qText, value };
+    });
+    const sum = answers.reduce((acc, a) => acc + (a.value || 0), 0);
     const avg = sum / p.questions.length;
     const pct = (avg / 5) * 100;
-    return { ...p, avg, pct, sum, count: p.questions.length };
+    return { ...p, avg, pct, sum, count: p.questions.length, answers };
   });
 
   const totalSum = pillarScores.reduce((acc, p) => acc + p.sum, 0);
@@ -1096,6 +1220,52 @@ function generateReport(lead){
     }, 300 + idx * 120);
   });
 
+  // ====== Acordeón de respuestas detalladas ======
+  const accordion = document.getElementById('answers-accordion');
+  accordion.innerHTML = '';
+  pillarScores.forEach((p, idx) => {
+    const details = document.createElement('details');
+    details.className = 'answer-pillar';
+
+    const itemsHTML = p.answers.map(a => {
+      const val = a.value;
+      const dots = [1,2,3,4,5].map(n =>
+        `<span class="dot${val && n <= val ? ' filled' : ''}"></span>`
+      ).join('');
+      const ratingText = val ? `${val}<small> / 5</small>` : '— <small>/ 5</small>';
+      return `
+        <li class="answer-item${val ? '' : ' unanswered'}">
+          <div class="answer-text">
+            <span class="q-tag">Q${String(a.idx).padStart(2,'0')}</span>${a.text}
+          </div>
+          <div class="answer-rating">
+            <div class="rating-dots">${dots}</div>
+            <div class="rating-num">${ratingText}</div>
+          </div>
+        </li>
+      `;
+    }).join('');
+
+    details.innerHTML = `
+      <summary>
+        <div class="answer-summary-left">
+          <div class="answer-pillar-name">${p.label}</div>
+          <div class="answer-pillar-meta">${p.count} pregunta${p.count === 1 ? '' : 's'} · ${Math.round(p.pct)}%</div>
+        </div>
+        <div class="answer-summary-right">
+          <div class="answer-pillar-score">${p.avg.toFixed(1)}<small>/ 5</small></div>
+          <div class="answer-chevron">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+      </summary>
+      <ul class="answer-list">${itemsHTML}</ul>
+    `;
+    accordion.appendChild(details);
+  });
+
   const sorted = [...pillarScores].sort((a, b) => a.avg - b.avg);
   const weakest = sorted.slice(0, 3);
   const strongest = sorted.slice(-3).reverse();
@@ -1154,6 +1324,15 @@ async function sendReportEmail(lead, totalScore, pillarScores, weakest, stronges
 
   const tierTitleText = tier.title.replace(/<[^>]+>/g, '');
 
+  const detailBlocks = pillarScores.flatMap(p => [
+    '',
+    `── ${p.label.toUpperCase()} (promedio ${p.avg.toFixed(1)}/5) ──`,
+    ...p.answers.map(a => {
+      const rating = a.value ? `[${a.value}/5]` : '[— /5]';
+      return `  ${rating}  Q${String(a.idx).padStart(2,'0')}. ${a.text}`;
+    })
+  ]);
+
   const summary = [
     `Empresa: ${lead.company}`,
     lead.contact ? `Contacto: ${lead.contact}` : null,
@@ -1169,8 +1348,14 @@ async function sendReportEmail(lead, totalScore, pillarScores, weakest, stronges
     ...weakest.map(p => `  · ${p.label} — ${p.avg.toFixed(1)}/5`),
     '',
     'Top 3 fortalezas:',
-    ...strongest.map(p => `  · ${p.label} — ${p.avg.toFixed(1)}/5`)
-  ].filter(Boolean).join('\n');
+    ...strongest.map(p => `  · ${p.label} — ${p.avg.toFixed(1)}/5`),
+    '',
+    '',
+    '═══════════════════════════════════════',
+    'DETALLE DE RESPUESTAS (escala 1-5)',
+    '═══════════════════════════════════════',
+    ...detailBlocks
+  ].filter(v => v !== null && v !== undefined).join('\n');
 
   let pdfBase64 = null;
   try {
