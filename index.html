@@ -1308,6 +1308,7 @@ function generateReport(lead){
   document.getElementById('assessment').style.display = 'none';
   document.getElementById('report').classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  requestParentScroll();
 
   // Esperar a que terminen las animaciones del reporte antes de capturar el PDF
   setTimeout(() => {
@@ -1422,7 +1423,27 @@ document.getElementById('restart-btn').addEventListener('click', () => {
   document.getElementById('report').classList.remove('active');
   document.getElementById('assessment').style.display = 'block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  requestParentScroll();
 });
+
+// ============ Soporte para embeber en iframe (Webflow) ============
+// Reporta la altura del contenido al sitio padre para auto-ajustar el iframe.
+function postHeight(){
+  if (window.parent === window) return;
+  var h = document.documentElement.scrollHeight;
+  window.parent.postMessage({ boscoCheckupHeight: h }, '*');
+}
+function requestParentScroll(){
+  if (window.parent === window) return;
+  window.parent.postMessage({ boscoScrollTop: true }, '*');
+}
+window.addEventListener('load', postHeight);
+window.addEventListener('resize', postHeight);
+if (window.ResizeObserver){
+  new ResizeObserver(postHeight).observe(document.body);
+} else {
+  setInterval(postHeight, 600);
+}
 </script>
 </body>
 </html>
