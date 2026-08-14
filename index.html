@@ -345,7 +345,9 @@ input[type=range]::-moz-range-thumb{
 @media(max-width:720px){
   .nav{
     position:fixed;left:0;right:0;bottom:0;z-index:70;margin:0;
-    padding:14px 16px calc(14px + env(safe-area-inset-bottom));
+    /* 84px a la derecha: deja libre el botón flotante de WhatsApp del sitio
+       (fixed, 55px, right:20 bottom:20) que se encima sobre la barra. */
+    padding:14px 84px calc(14px + env(safe-area-inset-bottom)) 16px;
     background:rgba(6,26,19,.72);
     backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);
     border-top:1px solid var(--glass-line);
