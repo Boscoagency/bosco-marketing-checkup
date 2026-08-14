@@ -1310,8 +1310,29 @@ function renderReport(){
   `);
   reportEl = el;
 
+  /* Los CTAs viven dentro del iframe de Webflow y varios navegadores bloquean
+     en silencio un target="_blank" disparado desde un iframe cross-origin.
+     Abrimos por JS y, si el navegador lo impide, navegamos la ventana superior.
+     OJO: window.open(url,'_blank','noopener') devuelve null aunque funcione,
+     así que se abre sin la feature y se anula el opener después. */
+  function openExternal(url){
+    let win = null;
+    try { win = window.open(url, '_blank'); } catch (_) {}
+    if (win) { try { win.opener = null; } catch (_) {} return; }
+    try { window.top.location.href = url; }
+    catch (_) { window.location.href = url; }
+  }
+
   const bookingLink = el.querySelector(`a[href="${BOOKING_URL}"]`);
-  if (bookingLink) bookingLink.addEventListener('click', () => trackCheckupEvent('CheckupBookingClick'));
+  const waLink = el.querySelector('.btn-wa');
+  [[bookingLink, 'CheckupBookingClick'], [waLink, 'CheckupWhatsappClick']].forEach(([a, ev]) => {
+    if (!a) return;
+    a.addEventListener('click', e => {
+      trackCheckupEvent(ev);
+      e.preventDefault();
+      openExternal(a.href);
+    });
+  });
 
   // Anillo + conteo
   const ring = el.querySelector('#ring');
