@@ -84,6 +84,15 @@ html,body{
 html.embedded .shell{padding-top:104px}
 @media(max-width:720px){html.embedded .shell{padding-top:96px}}
 html.embedded .topbar{top:98px}
+/* Dentro del iframe (que no hace scroll propio) la barra inferior fija se
+   dibuja sobre el contenido en vez de al final. Embebido la dejamos en flujo. */
+@media(max-width:720px){
+  html.embedded .nav{
+    position:static;padding:0;margin-top:26px;
+    background:none;backdrop-filter:none;-webkit-backdrop-filter:none;border-top:none;
+  }
+  html.embedded .shell{padding-bottom:60px}
+}
 
 /* ═══ TOPBAR ═══ */
 .topbar{
