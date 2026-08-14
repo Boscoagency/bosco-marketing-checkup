@@ -1432,7 +1432,7 @@ async function sendReport(total, scores, weakest, strongest, tier){
     status.innerHTML = (cls ? '' : '<span class="spin"></span>') + text;
   };
 
-  if (!lead) return;
+  if (!lead || lead.demo) return; // #demo nunca dispara correo
   if (!WEB3FORMS_ACCESS_KEY || WEB3FORMS_ACCESS_KEY.startsWith('REEMPLAZA')){
     console.warn('[Bosco Checkup] Falta el Access Key de Web3Forms — no se envía el correo.');
     return;
@@ -1567,8 +1567,18 @@ window.addEventListener('resize', postHeight);
 if (window.ResizeObserver) new ResizeObserver(postHeight).observe(document.body);
 else setInterval(postHeight, 600);
 
-/* Arranque */
-go(0);
+/* Arranque.
+   Con #demo salta directo al reporte con datos de ejemplo — sirve para revisar
+   el diseño o enseñarlo sin contestar las 20 preguntas. Nunca envía correo. */
+if (location.hash === '#demo'){
+  const sample = [82,74,90,55,48,61,66,40,52,71,35,58,44,77,63,49,80,57,68,42];
+  state.forEach((q,i) => { q.value = sample[i % sample.length]; q.touched = true; });
+  lead = { name:'Vista de ejemplo', company:'Empresa Demo', employees:'11 – 50',
+           phone:'', phoneDigits:'', email:'', marketingConsent:false, demo:true };
+  go(REPORT_STEP);
+} else {
+  go(0);
+}
 </script>
 </body>
 </html>
