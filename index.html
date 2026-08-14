@@ -78,6 +78,13 @@ html,body{
 .shell{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:24px 24px 120px;min-height:100vh}
 @media(max-width:720px){.shell{padding:16px 16px 140px}}
 
+/* Embebido en Webflow: el navbar del sitio (.topnav-wrapper) es fixed y ocupa
+   hasta 86px del viewport, así que tapaba la cabecera del checkup cada vez que
+   el padre hace scroll al inicio del iframe. Le reservamos ese espacio. */
+html.embedded .shell{padding-top:104px}
+@media(max-width:720px){html.embedded .shell{padding-top:96px}}
+html.embedded .topbar{top:98px}
+
 /* ═══ TOPBAR ═══ */
 .topbar{
   display:flex;align-items:center;justify-content:space-between;gap:20px;
@@ -712,6 +719,10 @@ const parentOrigin = (() => {
   return 'https://www.boscoagency.com';
 })();
 const trackedCheckupEvents = new Set();
+
+/* Marca el documento cuando corre dentro del iframe: el CSS usa .embedded para
+   reservar el alto del navbar fijo de Webflow. En standalone no aplica. */
+if (window.parent !== window) document.documentElement.classList.add('embedded');
 
 function postToParent(payload){
   if (window.parent === window) return;
