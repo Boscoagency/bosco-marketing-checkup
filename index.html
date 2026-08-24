@@ -773,10 +773,18 @@ async function hashedLeadIdentifiers(l){
   const email = (l.email || '').trim().toLowerCase();
   let phone = (l.phoneDigits || '').replace(/\D/g,'');
   if (phone.length === 10) phone = '52' + phone;   // México, 10 dígitos nacionales
-  const [em, ph] = await Promise.all([sha256Hex(email), sha256Hex(phone)]);
+  /* OJO: Meta y Google normalizan el teléfono distinto ANTES de hashear.
+     Meta lo quiere sin '+' (528112345678); Google exige E.164 con '+'
+     (+528112345678). Un solo hash no le sirve a los dos, por eso van ambos. */
+  const [em, ph, phE164] = await Promise.all([
+    sha256Hex(email),
+    sha256Hex(phone),
+    sha256Hex(phone ? '+' + phone : '')
+  ]);
   const out = {};
   if (em) out.em = em;
   if (ph) out.ph = ph;
+  if (phE164) out.ph_e164 = phE164;
   return out;
 }
 
