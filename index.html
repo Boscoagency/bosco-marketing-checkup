@@ -729,6 +729,10 @@ const parentOrigin = (() => {
 })();
 const trackedCheckupEvents = new Set();
 
+/* Advanced matching / enhanced conversions.
+   Poner en false para dejar de enviar identificadores hasheados por completo. */
+const SEND_HASHED_IDENTIFIERS = true;
+
 /* Marca el documento cuando corre dentro del iframe: el CSS usa .embedded para
    reservar el alto del navbar fijo de Webflow. En standalone no aplica. */
 if (window.parent !== window) document.documentElement.classList.add('embedded');
@@ -737,10 +741,52 @@ function postToParent(payload){
   if (window.parent === window) return;
   window.parent.postMessage(payload, parentOrigin);
 }
-function trackCheckupEvent(event, eventData = {}){
-  if (trackedCheckupEvents.has(event)) return;
-  trackedCheckupEvents.add(event);
-  postToParent({ source:CHECKUP_MESSAGE_SOURCE, event, eventData });
+
+/* ID único por evento. Hoy no se usa, pero si algún día se agrega la
+   Conversions API de Meta del lado servidor, este es el campo que evita
+   contar la misma conversión dos veces. */
+function newEventId(){
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'ck-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,10);
+}
+
+/* `dedupeKey` permite repetir un mismo nombre de evento con parámetros
+   distintos — p. ej. CheckupPillarComplete una vez por cada pilar. */
+function trackCheckupEvent(event, eventData = {}, dedupeKey = event){
+  if (trackedCheckupEvents.has(dedupeKey)) return;
+  trackedCheckupEvents.add(dedupeKey);
+  postToParent({ source:CHECKUP_MESSAGE_SOURCE, event, eventId:newEventId(), eventData });
+}
+
+/* El correo y el teléfono NUNCA salen del iframe en claro. Se normalizan
+   (minúsculas y sin espacios; teléfono a E.164 sin '+') y se envían como
+   SHA-256 hex, que es justo el formato que Meta y Google esperan pre-hasheado.
+   Solo se envían si el usuario marcó el consentimiento de marketing. */
+async function sha256Hex(value){
+  if (!value) return null;
+  if (!(window.crypto && crypto.subtle)) return null; // requiere https
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2,'0')).join('');
+}
+async function hashedLeadIdentifiers(l){
+  if (!SEND_HASHED_IDENTIFIERS || !l || !l.marketingConsent) return {};
+  const email = (l.email || '').trim().toLowerCase();
+  let phone = (l.phoneDigits || '').replace(/\D/g,'');
+  if (phone.length === 10) phone = '52' + phone;   // México, 10 dígitos nacionales
+  const [em, ph] = await Promise.all([sha256Hex(email), sha256Hex(phone)]);
+  const out = {};
+  if (em) out.em = em;
+  if (ph) out.ph = ph;
+  return out;
+}
+
+/* Banda de score — la usan las audiencias de remarketing para separar
+   "empresa con marketing roto" de "empresa ya madura". */
+function scoreBand(total){
+  if (total >= 80) return 'leader';
+  if (total >= 60) return 'optimizacion';
+  if (total >= 40) return 'direccion';
+  return 'reconstruccion';
 }
 
 /* Envío del reporte — Web3Forms (https://web3forms.com) */
@@ -1003,7 +1049,18 @@ function renderPillar(pi){
   });
 
   el.querySelector('#back').onclick = () => go(step - 1);
-  nextBtn.onclick = () => go(step + 1);
+  nextBtn.onclick = () => {
+    const s = pillarStats(pi);
+    trackCheckupEvent('CheckupPillarComplete', {
+      pillar: pi + 1,
+      pillar_name: p.label,
+      pillar_score: Math.round(s.pct),
+      progress: Math.round((pi + 1) / PILLARS.length * 100)
+    }, 'pillar-' + pi);
+    // Mitad del recorrido: la señal más fiable de "sí le interesó"
+    if (pi + 1 === Math.ceil(PILLARS.length / 2)) trackCheckupEvent('CheckupHalfway');
+    go(step + 1);
+  };
   syncNav();
 }
 
@@ -1076,8 +1133,14 @@ function renderForm(){
 
   const $ = s => el.querySelector(s);
   ['#i-name','#i-company','#i-email','#i-phone'].forEach(s =>
-    $(s).addEventListener('input', () => { if ($(s).value.trim()) $(s).closest('.field').classList.remove('error'); }));
-  $('#i-emp').addEventListener('change', () => { if ($('#i-emp').value) $('#f-emp').classList.remove('error'); });
+    $(s).addEventListener('input', () => {
+      trackCheckupEvent('CheckupFormStart');
+      if ($(s).value.trim()) $(s).closest('.field').classList.remove('error');
+    }));
+  $('#i-emp').addEventListener('change', () => {
+    trackCheckupEvent('CheckupFormStart');
+    if ($('#i-emp').value) $('#f-emp').classList.remove('error');
+  });
   $('#i-privacy').addEventListener('change', () => { if ($('#i-privacy').checked) $('#f-privacy').classList.remove('error'); });
 
   $('#back').onclick = () => go(step - 1);
@@ -1121,7 +1184,19 @@ function renderForm(){
       email,
       marketingConsent: $('#i-mkt').checked
     };
-    trackCheckupEvent('CheckupLead');
+    /* El hash es asíncrono, así que el evento se emite dentro del .then()
+       para que los identificadores viajen en el MISMO mensaje que el Lead —
+       si llegaran después, Meta ya habría registrado la conversión sin ellos. */
+    const leadScore = globalStats().pct;
+    hashedLeadIdentifiers(lead)
+      .catch(() => ({}))
+      .then(identifiers => trackCheckupEvent('CheckupLead', {
+        score: leadScore,
+        score_band: scoreBand(leadScore),
+        employees: lead.employees,
+        marketing_consent: lead.marketingConsent,
+        identifiers
+      }));
     go(REPORT_STEP);
   };
 }
@@ -1174,6 +1249,16 @@ function renderReport(){
   const sorted   = [...scores].sort((a,b) => a.pct - b.pct);
   const weakest  = sorted.slice(0,3);
   const strongest= sorted.slice(-3).reverse();
+
+  /* Reporte desbloqueado: el momento de mayor intención de toda la herramienta. */
+  if (!(lead && lead.demo)){
+    trackCheckupEvent('CheckupReportView', {
+      score: total,
+      score_band: scoreBand(total),
+      weakest_pillar: weakest[0] ? weakest[0].label : '',
+      employees: lead ? lead.employees : ''
+    });
+  }
 
   const barsHTML = scores.map(p => {
     let cls = 'mid', desc = 'Funcional, con áreas claras de mejora.';
@@ -1328,7 +1413,7 @@ function renderReport(){
   [[bookingLink, 'CheckupBookingClick'], [waLink, 'CheckupWhatsappClick']].forEach(([a, ev]) => {
     if (!a) return;
     a.addEventListener('click', e => {
-      trackCheckupEvent(ev);
+      trackCheckupEvent(ev, { score: total, score_band: scoreBand(total) });
       e.preventDefault();
       openExternal(a.href);
     });
@@ -1360,6 +1445,7 @@ function renderReport(){
   // Descarga manual del PDF
   const pdfBtn = el.querySelector('#pdf');
   pdfBtn.onclick = async () => {
+    trackCheckupEvent('CheckupPdfDownload', { score: total, score_band: scoreBand(total) });
     const original = pdfBtn.textContent;
     pdfBtn.textContent = '⏳ Generando PDF…';
     pdfBtn.disabled = true;
@@ -1577,6 +1663,9 @@ if (location.hash === '#demo'){
            phone:'', phoneDigits:'', email:'', marketingConsent:false, demo:true };
   go(REPORT_STEP);
 } else {
+  /* Cargó la herramienta. Es el denominador del embudo: cuánta gente
+     llegó a ver el diagnóstico, hayan interactuado o no. */
+  trackCheckupEvent('CheckupView');
   go(0);
 }
 </script>
