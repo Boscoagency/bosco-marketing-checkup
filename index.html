@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 /* ═══════════════════════════════════════════════════════════
    BOSCO — MARKETING MATURITY CHECKUP v2
@@ -910,7 +909,12 @@ function go(next){
     current.classList.remove('active');
     current.classList.add('leaving');
   }
-  if (next === FORM_STEP) trackCheckupEvent('CheckupFormReached');
+  if (next === FORM_STEP) {
+    trackCheckupEvent('CheckupFormReached');
+    /* Va a hacer falta en el reporte: lo bajamos ya, en segundo plano,
+       para que el PDF no tenga que esperar. Si falla, no pasa nada. */
+    ensureHtml2Pdf().catch(function(){});
+  }
   step = next;
   setTimeout(() => {
     stage.querySelectorAll('.screen').forEach(s => s.remove());
@@ -1502,7 +1506,33 @@ function pdfFilename(){
   return `bosco-checkup-${c.replace(/[^a-z0-9]/gi,'-').toLowerCase()}.pdf`;
 }
 
+/* html2pdf pesa ~900 KB. Antes se cargaba con un <script> BLOQUEANTE en el
+   <head>, así que el navegador no pintaba absolutamente nada hasta terminar
+   de bajarlo. Dentro del navegador in-app de Instagram/Facebook —por donde
+   entra casi todo el tráfico de la campaña, con datos móviles— eso dejaba
+   el iframe EN BLANCO durante decenas de segundos, y la gente se iba antes
+   de ver el diagnóstico. Ahora se carga solo cuando de verdad se ocupa
+   (al generar el PDF, ya en la pantalla del reporte). */
+var html2pdfPromise = null;
+function ensureHtml2Pdf(){
+  if (typeof html2pdf !== 'undefined') return Promise.resolve();
+  if (html2pdfPromise) return html2pdfPromise;
+  html2pdfPromise = new Promise(function(resolve, reject){
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    s.async = true;
+    s.onload = function(){ resolve(); };
+    s.onerror = function(){
+      html2pdfPromise = null;              // permite reintentar
+      reject(new Error('html2pdf no se pudo cargar'));
+    };
+    document.head.appendChild(s);
+  });
+  return html2pdfPromise;
+}
+
 async function buildPDFBlob(){
+  await ensureHtml2Pdf();
   if (typeof html2pdf === 'undefined') throw new Error('html2pdf no disponible');
   const root = reportEl;
   if (!root || !root.isConnected) throw new Error('reporte no montado');
