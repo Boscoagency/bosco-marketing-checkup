@@ -351,11 +351,15 @@ input[type=range]::-moz-range-thumb{
   background:radial-gradient(circle,rgba(168,204,87,.42),transparent 70%);
   transition:left .06s linear;
 }
-.slider-scale{
-  display:flex;justify-content:space-between;margin-top:10px;
-  font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
-  color:rgba(232,242,233,.4);font-weight:600;
+.slider-nums{
+  display:flex;justify-content:space-between;margin-top:10px;padding:0 1px;
 }
+.slider-nums span{
+  font-size:11.5px;font-weight:700;color:rgba(232,242,233,.28);
+  font-variant-numeric:tabular-nums;transition:color .25s var(--ease);
+}
+.slider-nums span.filled{color:rgba(232,242,233,.6)}
+.slider-nums span.current{color:var(--leaf);font-size:13px}
 
 /* ═══ NAV ═══ */
 .nav{
@@ -836,6 +840,14 @@ const ZONES = [
 ];
 const zoneLabel = v => ZONES.find(z => v <= z.max).label;
 
+/* Fila de números 1–10 bajo el slider: los que ya "pasó" el thumb se
+   iluminan, como una mini línea de progreso; el actual queda en acento. */
+const numRow = v => Array.from({length:10}, (_,idx) => {
+  const n = idx + 1, level = v / 10;
+  const cls = n === level ? 'current' : (n <= level ? 'filled' : '');
+  return `<span class="${cls}">${n}</span>`;
+}).join('');
+
 /* Estado — cada pregunta guarda 0–100 y si el usuario ya la tocó */
 const state = [];
 let qCounter = 0;
@@ -974,14 +986,14 @@ function renderPillar(pi){
       </div>
       <div class="slider-zone" style="--fill:${q.value}%;--g1:${p.g1};--g2:${p.g2}">
         <div class="slider-head">
-          <span class="slider-verdict">${q.touched ? zoneLabel(q.value) : 'Desliza para responder'}</span>
-          <span class="slider-pct">${q.value}<sup>%</sup></span>
+          <span class="slider-verdict">${q.touched ? zoneLabel(q.value) : 'Elige tu calificación'}</span>
+          <span class="slider-pct">${q.value/10}<sup>/10</sup></span>
         </div>
         <div class="slider-track">
-          <input type="range" min="0" max="100" step="1" value="${q.value}"
-                 aria-label="${esc(q.text)}" aria-valuetext="${q.value}% — ${zoneLabel(q.value)}">
+          <input type="range" min="10" max="100" step="10" value="${q.value}"
+                 aria-label="${esc(q.text)}" aria-valuetext="${q.value/10} de 10 — ${zoneLabel(q.value)}">
         </div>
-        <div class="slider-scale"><span>Nada</span><span>Parcial</span><span>Totalmente</span></div>
+        <div class="slider-nums">${numRow(q.value)}</div>
       </div>
     </div>
   `).join('');
@@ -1022,7 +1034,7 @@ function renderPillar(pi){
     const s = pillarStats(pi);
     nextBtn.disabled = !s.complete;
     hint.textContent = s.complete
-      ? `Bloque completo · ${Math.round(s.pct)}% en ${p.label}`
+      ? `Bloque completo · ${(s.pct/10).toFixed(1)}/10 en ${p.label}`
       : `${s.answered} de ${s.total} respondidas en este bloque`;
     const pending = state.filter(q => !q.touched).length;
     left.textContent = pending > 0 ? `Faltan ${pending}` : '¡Todas listas!';
@@ -1034,15 +1046,17 @@ function renderPillar(pi){
     const zone    = card.querySelector('.slider-zone');
     const verdict = card.querySelector('.slider-verdict');
     const pct     = card.querySelector('.slider-pct');
+    const nums    = card.querySelector('.slider-nums');
 
     const update = commit => {
       const v = +input.value;
       q.value = v;
       if (commit) q.touched = true;
       zone.style.setProperty('--fill', v + '%');
-      pct.innerHTML = v + '<sup>%</sup>';
-      verdict.textContent = q.touched ? zoneLabel(v) : 'Desliza para responder';
-      input.setAttribute('aria-valuetext', v + '% — ' + zoneLabel(v));
+      pct.innerHTML = (v/10) + '<sup>/10</sup>';
+      nums.innerHTML = numRow(v);
+      verdict.textContent = q.touched ? zoneLabel(v) : 'Elige tu calificación';
+      input.setAttribute('aria-valuetext', (v/10) + ' de 10 — ' + zoneLabel(v));
       card.classList.toggle('answered', q.touched);
       refreshTop();
       syncNav();
