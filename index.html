@@ -228,8 +228,12 @@ h2{font-weight:700;font-size:clamp(26px,3.4vw,38px);line-height:1.08;letter-spac
 .intro-body{padding:clamp(32px,5vw,64px)}
 .intro-body h1{margin:22px 0 20px}
 .intro-body .lede{max-width:620px}
+.intro-cta{margin-top:30px;display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.intro-cta .btn{padding:17px 34px;font-size:15.5px}
+@media(max-width:720px){.intro-cta .btn{width:100%;padding:16px 20px}}
+.intro-reassure{font-size:12.5px;font-weight:600;color:rgba(232,242,233,.6);letter-spacing:-.005em}
 .intro-meta{
-  display:flex;flex-wrap:wrap;gap:28px;margin-top:36px;padding-top:28px;
+  display:flex;flex-wrap:wrap;gap:28px;margin-top:34px;padding-top:26px;
   border-top:1px solid rgba(255,255,255,.1);
 }
 .intro-meta div{min-width:96px}
@@ -938,24 +942,16 @@ function renderIntro(){
     ${skewOpen('#A8CC57','#2E6B4F')}
       <div class="intro-body">
         <div class="eyebrow">Diagnóstico gratuito · 5 minutos</div>
-        <h1>¿Qué tan saludable es tu marketing, <span class="accent">realmente</span>?</h1>
-        <p class="lede">20 enunciados que evalúan los 6 pilares de un marketing integral. No hay respuestas correctas — hay una foto honesta de dónde estás parado.</p>
-        <div class="pillrow">
-          <span class="pill hi">Built to make things happen</span>
-          <span class="pill">Sin costo</span>
-          <span class="pill">Reporte inmediato</span>
-        </div>
-        <div class="intro-meta">
-          <div><div class="n">6</div><div class="t">Pilares</div></div>
-          <div><div class="n">20</div><div class="t">Enunciados</div></div>
-          <div><div class="n">~5</div><div class="t">Minutos</div></div>
-          <div><div class="n">1</div><div class="t">Reporte</div></div>
+        <h1>No puedes dirigir lo que no mides. <span class="accent">Mide tu marketing hoy.</span></h1>
+        <p class="lede">Evalúa los 6 pilares de tu estrategia y recibe tu calificación al instante, con un plan de qué atacar primero.</p>
+        <div class="intro-cta">
+          <button class="btn btn-primary" id="start"><span>Obtener mi calificación</span><span class="arrow">→</span></button>
+          <span class="intro-reassure">Sin costo · Sin registro previo · Resultado inmediato</span>
         </div>
       </div>
     ${skewClose}
     <div class="nav">
       <span class="nav-hint">Desliza cada barra según qué tan aplicado lo tienes.</span>
-      <button class="btn btn-primary" id="start"><span>Comenzar diagnóstico</span><span class="arrow">→</span></button>
     </div>
   `);
   el.querySelector('#start').onclick = () => {
