@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prueba de carga — Bosco</title>
+<style>
+  body{margin:0;padding:20px;background:#0d1117;color:#e6edf3;
+       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.5}
+  h1{font-size:20px;margin:0 0 4px}
+  .ok{color:#3fb950;font-weight:700}
+  .bad{color:#f85149;font-weight:700}
+  .wait{color:#d29922;font-weight:700}
+  .row{padding:10px 0;border-bottom:1px solid #21262d}
+  .lbl{font-size:13px;color:#8b949e}
+  .val{font-size:15px;word-break:break-all}
+  #paso1{padding:14px;background:#1a2b1a;border:1px solid #3fb950;border-radius:8px;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div id="paso1"><span class="ok">✓ PASO 1 OK</span><br>
+Esta página cargó. Eso significa que <b>sí puedes llegar a github.io</b>.</div>
+
+<h1>Prueba de carga de Bosco</h1>
+<p class="lbl">Mándale captura de esta pantalla completa a Alejandro.</p>
+
+<div class="row"><div class="lbl">PASO 2 — ¿carga el diagnóstico completo?</div>
+  <div class="val" id="p2"><span class="wait">esperando…</span></div></div>
+<div class="row"><div class="lbl">Tiempo que tardó el diagnóstico</div>
+  <div class="val" id="t2">—</div></div>
+<div class="row"><div class="lbl">PASO 3 — ¿cargan las fuentes de Google?</div>
+  <div class="val" id="p3"><span class="wait">esperando…</span></div></div>
+<div class="row"><div class="lbl">Tipo de conexión</div><div class="val" id="net">—</div></div>
+<div class="row"><div class="lbl">Memoria del dispositivo</div><div class="val" id="mem">—</div></div>
+<div class="row"><div class="lbl">Navegador</div><div class="val" id="ua">—</div></div>
+
+<script>
+(function(){
+  var t0 = Date.now();
+  function set(id,html){ document.getElementById(id).innerHTML = html; }
+
+  // PASO 2: bajar el index.html real del checkup y medir
+  var done = false;
+  var to = setTimeout(function(){
+    if(!done){ done=true; set('p2','<span class="bad">✗ NO CARGO (mas de 25 seg)</span>'); set('t2','timeout'); }
+  }, 25000);
+
+  fetch('./index.html', {cache:'no-store'})
+    .then(function(r){ return r.text(); })
+    .then(function(txt){
+      if(done) return; done=true; clearTimeout(to);
+      var kb = Math.round(txt.length/1024);
+      set('p2','<span class="ok">✓ SI CARGO</span> ('+kb+' KB)');
+      set('t2', ((Date.now()-t0)/1000).toFixed(1)+' segundos');
+    })
+    .catch(function(e){
+      if(done) return; done=true; clearTimeout(to);
+      set('p2','<span class="bad">✗ FALLO: '+e.message+'</span>');
+      set('t2','error');
+    });
+
+  // PASO 3: fuentes de Google
+  var f0 = Date.now();
+  fetch('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400&display=swap',{mode:'no-cors'})
+    .then(function(){ set('p3','<span class="ok">✓ SI</span> ('+((Date.now()-f0)/1000).toFixed(1)+'s)'); })
+    .catch(function(e){ set('p3','<span class="bad">✗ NO — '+e.message+'</span>'); });
+
+  var c = navigator.connection || {};
+  set('net', (c.effectiveType||'?') + (c.downlink? ' · '+c.downlink+' Mbps':'') + (c.saveData? ' · AHORRO DE DATOS ACTIVADO':''));
+  set('mem', (navigator.deviceMemory? navigator.deviceMemory+' GB':'no disponible'));
+  set('ua', navigator.userAgent);
+})();
+</script>
+</body>
+</html>
