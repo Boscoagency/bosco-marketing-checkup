@@ -194,6 +194,7 @@ html.embedded .topbar{top:98px}
 }
 
 /* ═══ SCREENS ═══ */
+.nav-hint.warn{color:#EFC072;font-weight:600}
 .screen{display:none}
 .screen.active{display:block;animation:screenIn .62s var(--ease-out) both}
 .screen.leaving{display:block;animation:screenOut .34s var(--ease) both;pointer-events:none}
@@ -277,11 +278,11 @@ h2{font-weight:700;font-size:clamp(26px,3.4vw,38px);line-height:1.08;letter-spac
 
 /* ═══ PREGUNTA + SLIDER ═══ */
 .q{
+  position:relative;
   padding:24px 26px;margin-bottom:14px;border-radius:var(--r-md);
   background:rgba(255,255,255,.035);
   border:1px solid rgba(255,255,255,.08);
-  transition:background .4s var(--ease),border-color .4s var(--ease);
-  opacity:0;transform:translateY(18px);filter:blur(6px);
+  transition:background .4s var(--ease),border-color .4s var(--ease),box-shadow .4s var(--ease);
   animation:qIn .68s var(--ease-out) both;
   animation-delay:calc(var(--i) * 105ms + 180ms);
 }
@@ -289,9 +290,35 @@ h2{font-weight:700;font-size:clamp(26px,3.4vw,38px);line-height:1.08;letter-spac
   .q{padding:20px 18px}
   .q-top{flex-direction:column;gap:10px;margin-bottom:18px}
   .q-num{align-self:flex-start}
+  .q-state{align-self:flex-start;margin-left:0!important}
 }
-@keyframes qIn{to{opacity:1;transform:none;filter:blur(0)}}
-.q.answered{background:rgba(255,255,255,.06);border-color:rgba(168,204,87,.26)}
+/* El estado visible es el de base, no el fill de la animación: si otra
+   animación (el parpadeo de "falta responder") releva a qIn, la tarjeta
+   se queda visible en vez de desaparecer. */
+@keyframes qIn{from{opacity:0;transform:translateY(18px);filter:blur(6px)}to{opacity:1;transform:none;filter:blur(0)}}
+
+/* Se tiene que ver de un vistazo cuál ya contestaste y cuál no:
+   pendiente = borde punteado ámbar; contestada = contorno verde sólido. */
+.q:not(.answered){border-style:dashed;border-color:rgba(224,163,64,.42)}
+.q.answered{
+  background:rgba(168,204,87,.07);
+  border-color:rgba(168,204,87,.85);
+  box-shadow:0 0 0 1px rgba(168,204,87,.5), 0 0 26px rgba(168,204,87,.10);
+}
+.q-state{
+  flex-shrink:0;margin-left:auto;margin-top:1px;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  padding:5px 10px;border-radius:999px;transition:all .3s var(--ease);
+}
+.q:not(.answered) .q-state{color:#EFC072;background:rgba(224,163,64,.12);border:1px solid rgba(224,163,64,.4)}
+.q.answered .q-state{color:#0C2418;background:var(--leaf);border:1px solid var(--leaf)}
+/* Al intentar avanzar sin terminar, las pendientes parpadean */
+@keyframes qFlash{
+  0%,100%{box-shadow:0 0 0 1px rgba(224,163,64,.45)}
+  50%{box-shadow:0 0 0 3px rgba(224,163,64,.9), 0 0 30px rgba(224,163,64,.32)}
+}
+.q.flash{animation:qFlash .72s var(--ease) 3}
 .q-top{display:flex;gap:14px;align-items:flex-start;margin-bottom:22px}
 .q-num{
   flex-shrink:0;font-size:11px;font-weight:700;color:var(--leaf);letter-spacing:.06em;
@@ -406,7 +433,13 @@ input[type=range]::-moz-range-thumb{
 .btn-back:hover .arrow{transform:rotate(180deg) translateX(4px)}
 @media(max-width:720px){.btn{flex:1;padding:15px 20px;font-size:14.5px}.btn-back{flex:0 0 54px;padding:15px 0}.btn-back span:not(.arrow){display:none}}
 .nav-hint{font-size:12.5px;color:rgba(232,242,233,.5);font-weight:500}
-@media(max-width:720px){.nav-hint{display:none}}
+/* En móvil la barra va apretada: el contador se oculta, pero el aviso de
+   "te faltan N preguntas" sí tiene que verse — es justo lo que se perdía. */
+@media(max-width:720px){
+  .nav{flex-wrap:wrap}
+  .nav-hint{display:none}
+  .nav-hint.warn{display:block;order:-1;width:100%;text-align:center;margin-bottom:4px}
+}
 
 /* ═══ FORM (lead) ═══ */
 .form-body{padding:clamp(30px,4.4vw,52px)}
@@ -665,9 +698,9 @@ const PILLARS = [
     subtitle:'A quién le vendes, por qué te eligen, hacia dónde vas.',
     g1:'#A8CC57', g2:'#2E6B4F',
     questions:[
-      'Tenemos un Ideal Customer Profile (ICP) o buyer persona documentado, validado con datos, y todo el equipo de marketing y ventas lo conoce.',
-      'Nuestra propuesta de valor está claramente diferenciada de la competencia, escrita en lenguaje del cliente, y la usamos consistentemente en todos nuestros mensajes.',
-      'Tenemos objetivos de marketing a 1 y 3 años, alineados a las metas del negocio, escritos y compartidos con el equipo directivo.'
+      'Tenemos bien identificado quién es nuestro cliente ideal (a quién le vendemos mejor y por qué), y todo el equipo de ventas y marketing lo tiene claro.',
+      'Sabemos explicar en pocas palabras por qué un cliente nos debe elegir a nosotros y no a la competencia, y lo decimos igual en todos lados.',
+      'Tenemos escrito a dónde queremos llegar este año y en los próximos tres, y la dirección de la empresa lo conoce.'
     ]
   },
   {
@@ -675,9 +708,9 @@ const PILLARS = [
     subtitle:'Coherencia, reconocimiento y memorabilidad.',
     g1:'#E0A340', g2:'#1B4534',
     questions:[
-      'Contamos con un brand book actualizado que define nuestra identidad visual, voz, tono y lineamientos de uso, y el equipo lo aplica.',
-      'Nuestra marca se ve y se siente consistente en todos los puntos de contacto: sitio web, redes sociales, materiales de ventas, empaque y experiencia del cliente.',
-      'Hemos medido el reconocimiento, percepción o salud de nuestra marca en nuestro mercado objetivo en los últimos 12 meses.'
+      'Tenemos un manual de marca actualizado (logo, colores, tipografías y forma de hablar) y el equipo lo usa.',
+      'Nuestra empresa se ve y se siente igual en todos lados: sitio web, redes sociales, materiales de venta, empaque y trato al cliente.',
+      'En el último año preguntamos o medimos qué tanto nos conoce nuestro mercado y qué opina de nosotros.'
     ]
   },
   {
@@ -685,10 +718,10 @@ const PILLARS = [
     subtitle:'Un motor predecible para generar leads y oportunidades.',
     g1:'#A8CC57', g2:'#173F30',
     questions:[
-      'Tenemos un funnel de marketing documentado con etapas claras desde awareness hasta conversión, y sabemos qué hace el cliente en cada una.',
-      'Generamos un volumen predecible y suficiente de leads calificados cada mes para alcanzar nuestras metas de ventas.',
-      'Tenemos una estrategia de contenido alineada al journey del comprador y se ejecuta de forma consistente (calendario editorial activo).',
-      'Sabemos exactamente qué canales nos traen los mejores clientes, cuánto nos cuesta adquirirlos por canal, y reasignamos presupuesto con base en eso.'
+      'Tenemos escrito el camino que sigue una persona desde que nos conoce hasta que nos compra, y sabemos qué hace en cada etapa.',
+      'Cada mes llegan suficientes clientes potenciales interesados para cumplir nuestras metas de venta, y no depende de la suerte.',
+      'Publicamos contenido de forma constante siguiendo un calendario, no solo cuando queda tiempo.',
+      'Sabemos qué medio nos trae los mejores clientes y cuánto nos cuesta conseguir uno por cada medio, y movemos el presupuesto con base en eso.'
     ]
   },
   {
@@ -696,9 +729,9 @@ const PILLARS = [
     subtitle:'Mides lo que importa y decides con base en eso.',
     g1:'#4F8C68', g2:'#A8CC57',
     questions:[
-      'Tenemos un dashboard de marketing con los KPIs clave del negocio que se revisa de forma semanal o mensual con disciplina.',
-      'Conocemos nuestros números fundamentales: CAC (costo de adquisición), LTV (valor de vida del cliente) y ROI por canal o campaña.',
-      'Cada campaña o iniciativa tiene KPIs definidos antes de lanzarse y se evalúa formalmente al cerrar para capturar aprendizajes.'
+      'Tenemos un tablero o reporte con los números clave de marketing y lo revisamos cada semana o cada mes sin falta.',
+      'Sabemos cuánto nos cuesta conseguir un cliente nuevo, cuánto dinero nos deja en total ese cliente y cuánto nos regresa cada campaña.',
+      'Antes de lanzar una campaña definimos qué resultado esperamos, y al terminar revisamos si se cumplió y qué aprendimos.'
     ]
   },
   {
@@ -706,9 +739,9 @@ const PILLARS = [
     subtitle:'Procesos documentados y stack tecnológico funcional.',
     g1:'#2E6B4F', g2:'#EFC072',
     questions:[
-      'Usamos un CRM actualizado y está integrado con nuestras herramientas de marketing (email, automatización, analítica, formularios web).',
-      'Tenemos procesos documentados (SOPs o playbooks) para las actividades recurrentes de marketing y cualquier nuevo miembro del equipo puede ejecutarlas.',
-      'Existe un proceso claro de handoff entre marketing y ventas, con criterios definidos de qué es un MQL y un SQL, y ambos equipos lo respetan.'
+      'Llevamos el seguimiento de clientes y prospectos en un sistema actualizado (un CRM), conectado con nuestras demás herramientas.',
+      'Las tareas de marketing que se repiten están escritas paso a paso, para que cualquier persona nueva las pueda hacer.',
+      'Marketing y ventas se pasan los prospectos con reglas claras: ambos saben cuándo un contacto ya está listo para que ventas lo llame.'
     ]
   },
   {
@@ -716,10 +749,10 @@ const PILLARS = [
     subtitle:'Las cosas pasan, a tiempo, con el equipo correcto.',
     g1:'#A8CC57', g2:'#4F8C68',
     questions:[
-      'Tenemos un plan de marketing trimestral con 3 a 7 prioridades claras, escritas, con dueño y fecha de entrega.',
-      'Cada iniciativa de marketing tiene una persona claramente responsable de su ejecución y resultado.',
-      'El equipo de marketing tiene una cadencia de reuniones regular (semanal y trimestral) para revisar avances, resolver problemas y mantener accountability.',
-      'Tenemos un líder de marketing senior (CMO, fractional CMO, o director con visión estratégica) dedicado a la estrategia, no solo a la ejecución táctica.'
+      'Cada tres meses definimos entre 3 y 7 prioridades de marketing, por escrito, con un responsable y una fecha de entrega.',
+      'Cada proyecto de marketing tiene una persona claramente responsable de que suceda y de su resultado.',
+      'El equipo de marketing se reúne de forma regular (cada semana y cada trimestre) para revisar avances y destrabar pendientes.',
+      'Alguien con experiencia y visión de negocio dirige nuestro marketing, no solo se encarga de ejecutar tareas.'
     ]
   }
 ];
@@ -866,10 +899,10 @@ const TOTAL = state.length;
 
 let lead = null;
 let reportEl = null; // referencia viva al reporte montado (la usa el PDF)
-let step = 0; // 0 = intro | 1..6 = pilares | 7 = datos | 8 = reporte
-const LAST_PILLAR = PILLARS.length;   // 6
-const FORM_STEP   = LAST_PILLAR + 1;  // 7
-const REPORT_STEP = LAST_PILLAR + 2;  // 8
+let step = 0; // 0 = intro | 1 = las 20 preguntas de corrido | 2 = datos | 3 = reporte
+const QUIZ_STEP   = 1;
+const FORM_STEP   = 2;
+const REPORT_STEP = 3;
 
 /* ═══════════════════════════════════════════════════════════
    HELPERS
@@ -953,8 +986,8 @@ const skewClose = `</div></div>`;
    RENDER
    ═══════════════════════════════════════════════════════════ */
 function render(){
-  if (step === 0)            renderIntro();
-  else if (step <= LAST_PILLAR) renderPillar(step - 1);
+  if (step === 0)               renderIntro();
+  else if (step === QUIZ_STEP)  renderQuiz();
   else if (step === FORM_STEP)  renderForm();
   else                          renderReport();
   refreshTop();
@@ -985,72 +1018,100 @@ function renderIntro(){
   };
 }
 
-/* ── Pilar ── */
-function renderPillar(pi){
-  const p = PILLARS[pi];
-  const qs = state.filter(q => q.pillar === pi);
-  const remaining = state.filter(q => !q.touched).length;
+/* ── Cuestionario: los 6 bloques, uno tras otro en la misma pantalla ── */
+function renderQuiz(){
 
-  const qHTML = qs.map((q,i) => `
+  const qCard = (q,p,i) => `
     <div class="q${q.touched ? ' answered' : ''}" data-qid="${q.id}" style="--i:${i}">
       <div class="q-top">
         <span class="q-num">Q${String(q.id).padStart(2,'0')}</span>
         <p class="q-text">${esc(q.text)}</p>
+        <span class="q-state">${q.touched ? 'Respondida' : 'Falta responder'}</span>
       </div>
       <div class="slider-zone" style="--fill:${q.value}%;--g1:${p.g1};--g2:${p.g2}">
         <div class="slider-head">
           <span class="slider-verdict">${q.touched ? zoneLabel(q.value) : 'Elige tu calificación'}</span>
-          <span class="slider-pct">${q.value/10}<sup>/10</sup></span>
+          <span class="slider-pct">${q.touched ? q.value/10 : '—'}<sup>/10</sup></span>
         </div>
         <div class="slider-track">
           <input type="range" min="10" max="100" step="10" value="${q.value}"
-                 aria-label="${esc(q.text)}" aria-valuetext="${q.value/10} de 10 — ${zoneLabel(q.value)}">
+                 aria-label="${esc(q.text)}" aria-valuetext="${q.touched ? (q.value/10) + ' de 10 — ' + zoneLabel(q.value) : 'Sin responder'}">
         </div>
         <div class="slider-nums">${numRow(q.value)}</div>
       </div>
     </div>
-  `).join('');
+  `;
+
+  const blocks = PILLARS.map((p,pi) => {
+    const qs = state.filter(q => q.pillar === pi);
+    return `
+      ${skewOpen(p.g1,p.g2)}
+        <div class="pillar-body" data-block="${pi}">
+          <div class="nudge">
+            ${SPROUT}
+            <span>${NUDGES[pi]}</span>
+            <span class="left" data-left="${pi}"></span>
+          </div>
+          <div class="pillar-head">
+            <div class="pillar-num">${String(pi+1).padStart(2,'0')}</div>
+            <div class="pillar-meta">
+              <div class="pillar-tag">Bloque ${pi+1} de ${PILLARS.length}</div>
+              <div class="pillar-title">${p.label}</div>
+              <div class="pillar-sub">${esc(p.subtitle)}</div>
+            </div>
+          </div>
+          ${qs.map((q,i) => qCard(q,p,i)).join('')}
+        </div>
+      ${skewClose}
+    `;
+  }).join('');
 
   const el = mount(`
-    ${skewOpen(p.g1,p.g2)}
-      <div class="pillar-body">
-        <div class="nudge">
-          ${SPROUT}
-          <span>${NUDGES[pi]}</span>
-          <span class="left">${remaining > 0 ? `Faltan ${remaining}` : '¡Todas listas!'}</span>
-        </div>
-        <div class="pillar-head">
-          <div class="pillar-num">${String(pi+1).padStart(2,'0')}</div>
-          <div class="pillar-meta">
-            <div class="pillar-tag">Pilar ${pi+1} de ${PILLARS.length}</div>
-            <div class="pillar-title">${p.label}</div>
-            <div class="pillar-sub">${esc(p.subtitle)}</div>
-          </div>
-        </div>
-        ${qHTML}
-      </div>
-    ${skewClose}
+    ${blocks}
     <div class="nav">
       <button class="btn btn-ghost btn-back" id="back"><span class="arrow">→</span><span>Atrás</span></button>
       <span class="nav-hint" id="hint"></span>
-      <button class="btn btn-primary" id="next" disabled>
-        <span>${pi + 1 === PILLARS.length ? 'Ver mi resultado' : 'Siguiente pilar'}</span><span class="arrow">→</span>
-      </button>
+      <button class="btn btn-primary" id="next"><span>Ver mi resultado</span><span class="arrow">→</span></button>
     </div>
   `);
 
   const nextBtn = el.querySelector('#next');
   const hint = el.querySelector('#hint');
-  const left = el.querySelector('.nudge .left');
+
+  /* Los eventos de bloque ya no cuelgan de un botón "siguiente pilar":
+     se disparan en cuanto quedan contestadas todas las preguntas del bloque.
+     Nombres y parámetros idénticos a los de siempre — no tocar. */
+  function trackProgress(){
+    PILLARS.forEach((p,pi) => {
+      const st = pillarStats(pi);
+      if (!st.complete) return;
+      trackCheckupEvent('CheckupPillarComplete', {
+        pillar: pi + 1,
+        pillar_name: p.label,
+        pillar_score: Math.round(st.pct),
+        progress: Math.round((pi + 1) / PILLARS.length * 100)
+      }, 'pillar-' + pi);
+    });
+    // Mitad del recorrido: la señal más fiable de "sí le interesó"
+    const done = PILLARS.filter((_,pi) => pillarStats(pi).complete).length;
+    if (done >= Math.ceil(PILLARS.length / 2)) trackCheckupEvent('CheckupHalfway');
+  }
 
   function syncNav(){
-    const s = pillarStats(pi);
-    nextBtn.disabled = !s.complete;
-    hint.textContent = s.complete
-      ? `Bloque completo · ${(s.pct/10).toFixed(1)}/10 en ${p.label}`
-      : `${s.answered} de ${s.total} respondidas en este bloque`;
+    PILLARS.forEach((_,pi) => {
+      const st = pillarStats(pi);
+      const tag = el.querySelector('[data-left="' + pi + '"]');
+      if (tag) tag.textContent = st.complete
+        ? 'Bloque completo'
+        : `Faltan ${st.total - st.answered} de ${st.total}`;
+    });
     const pending = state.filter(q => !q.touched).length;
-    left.textContent = pending > 0 ? `Faltan ${pending}` : '¡Todas listas!';
+    if (pending === 0){
+      hint.classList.remove('warn');
+      hint.textContent = `Las ${TOTAL} preguntas están listas · ${(globalStats().pct/10).toFixed(1)}/10`;
+    } else if (!hint.classList.contains('warn')){
+      hint.textContent = `${TOTAL - pending} de ${TOTAL} respondidas`;
+    }
   }
 
   el.querySelectorAll('.q').forEach(card => {
@@ -1060,38 +1121,47 @@ function renderPillar(pi){
     const verdict = card.querySelector('.slider-verdict');
     const pct     = card.querySelector('.slider-pct');
     const nums    = card.querySelector('.slider-nums');
+    const stateEl = card.querySelector('.q-state');
 
     const update = commit => {
       const v = +input.value;
       q.value = v;
       if (commit) q.touched = true;
       zone.style.setProperty('--fill', v + '%');
-      pct.innerHTML = (v/10) + '<sup>/10</sup>';
+      pct.innerHTML = (q.touched ? (v/10) : '—') + '<sup>/10</sup>';
       nums.innerHTML = numRow(v);
       verdict.textContent = q.touched ? zoneLabel(v) : 'Elige tu calificación';
       input.setAttribute('aria-valuetext', (v/10) + ' de 10 — ' + zoneLabel(v));
       card.classList.toggle('answered', q.touched);
+      card.classList.remove('flash');
+      stateEl.textContent = q.touched ? 'Respondida' : 'Falta responder';
+      hint.classList.remove('warn');
       refreshTop();
       syncNav();
+      trackProgress();
     };
 
     input.addEventListener('input', () => update(true));
     input.addEventListener('change', () => update(true));
   });
 
-  el.querySelector('#back').onclick = () => go(step - 1);
+  el.querySelector('#back').onclick = () => go(0);
+
   nextBtn.onclick = () => {
-    const s = pillarStats(pi);
-    trackCheckupEvent('CheckupPillarComplete', {
-      pillar: pi + 1,
-      pillar_name: p.label,
-      pillar_score: Math.round(s.pct),
-      progress: Math.round((pi + 1) / PILLARS.length * 100)
-    }, 'pillar-' + pi);
-    // Mitad del recorrido: la señal más fiable de "sí le interesó"
-    if (pi + 1 === Math.ceil(PILLARS.length / 2)) trackCheckupEvent('CheckupHalfway');
-    go(step + 1);
+    const missing = [...el.querySelectorAll('.q:not(.answered)')];
+    if (missing.length){
+      // No lo dejamos avanzar, pero sobre todo: le enseñamos cuáles faltan
+      hint.classList.add('warn');
+      hint.textContent = missing.length === 1
+        ? 'Te falta 1 pregunta — está marcada en ámbar'
+        : `Te faltan ${missing.length} preguntas — están marcadas en ámbar`;
+      missing.forEach(c => { c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash'); });
+      try { missing[0].scrollIntoView({ behavior:'smooth', block:'center' }); } catch(e){}
+      return;
+    }
+    go(FORM_STEP);
   };
+
   syncNav();
 }
 
@@ -1136,9 +1206,9 @@ function renderForm(){
             <div class="err" id="e-phone">Escribe un teléfono a 10 dígitos</div>
           </div>
           <div class="field full" id="f-email">
-            <label for="i-email">Correo empresarial</label>
-            <input type="email" id="i-email" placeholder="tu@empresa.com" autocomplete="email">
-            <div class="err" id="e-email">Usa un correo empresarial (no gmail, hotmail, etc.)</div>
+            <label for="i-email">Correo electrónico</label>
+            <input type="email" id="i-email" placeholder="tu@correo.com" autocomplete="email">
+            <div class="err" id="e-email">Escribe un correo válido</div>
           </div>
         </div>
 
@@ -1156,11 +1226,9 @@ function renderForm(){
     </div>
   `);
 
-  const GENERIC = ['gmail.com','googlemail.com','hotmail.com','hotmail.es','hotmail.com.mx','outlook.com','outlook.es','outlook.com.mx','live.com','live.com.mx','live.mx','yahoo.com','yahoo.com.mx','yahoo.es','ymail.com','icloud.com','me.com','mac.com','aol.com','protonmail.com','proton.me','gmx.com','gmx.es','mail.com','yandex.com','msn.com','prodigy.net.mx','terra.com.mx'];
-  const isBusiness = e => {
-    const m = e.toLowerCase().match(/^[^@\s]+@([^@\s]+\.[^@\s]+)$/);
-    return m ? !GENERIC.includes(m[1]) : false;
-  };
+  /* Se acepta cualquier correo (gmail, hotmail, etc.): solo validamos
+     que tenga forma de correo. Filtrar por dominio corporativo costaba leads. */
+  const isValidEmail = e => /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(e.toLowerCase());
 
   const $ = s => el.querySelector(s);
   ['#i-name','#i-company','#i-email','#i-phone'].forEach(s =>
@@ -1174,7 +1242,7 @@ function renderForm(){
   });
   $('#i-privacy').addEventListener('change', () => { if ($('#i-privacy').checked) $('#f-privacy').classList.remove('error'); });
 
-  $('#back').onclick = () => go(step - 1);
+  $('#back').onclick = () => go(QUIZ_STEP);
   $('#submit').onclick = () => {
     let first = null;
     const fail = (fieldSel, inputSel) => { $(fieldSel).classList.add('error'); first = first || $(inputSel); };
@@ -1196,10 +1264,10 @@ function renderForm(){
 
     const email = $('#i-email').value.trim();
     if (!email){
-      $('#e-email').textContent = 'Por favor escribe tu correo empresarial';
+      $('#e-email').textContent = 'Por favor escribe tu correo';
       fail('#f-email','#i-email');
-    } else if (!isBusiness(email)){
-      $('#e-email').textContent = 'Usa un correo empresarial (no gmail, hotmail, etc.)';
+    } else if (!isValidEmail(email)){
+      $('#e-email').textContent = 'Ese correo no parece válido — revísalo';
       fail('#f-email','#i-email');
     }
     if (!$('#i-privacy').checked) fail('#f-privacy','#i-privacy');
@@ -1611,7 +1679,7 @@ async function sendReport(total, scores, weakest, strongest, tier){
     `Número de empleados: ${lead.employees}`,
     `Teléfono / WhatsApp: ${lead.phone}`,
     `Escribirle por WhatsApp: https://wa.me/${lead.phoneDigits.length === 10 ? '52' + lead.phoneDigits : lead.phoneDigits}`,
-    `Correo empresarial: ${lead.email}`,
+    `Correo: ${lead.email}`,
     `Aviso de Privacidad: aceptado`,
     `Acepta comunicaciones comerciales: ${lead.marketingConsent ? 'Sí' : 'No'}`,
     '',
