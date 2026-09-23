@@ -607,7 +607,11 @@ a.btn{text-decoration:none}
 body.pdf-mode .bg,
 body.pdf-mode .skew .slab,
 body.pdf-mode .skew .blob,
-body.pdf-mode .acc-chev{display:none!important}
+body.pdf-mode .acc-chev,
+/* El filo de luz de 1px (.glass::before, absoluto con left/right en %) llega a
+   html2canvas con alto 0 y revienta createPattern ("canvas element with a width
+   or height of 0"). Era la causa de que el PDF nunca se generara. */
+body.pdf-mode .glass::before{display:none!important}
 body.pdf-mode .pdf-head{
   display:flex;align-items:center;justify-content:space-between;gap:20px;
   padding:0 4px 20px;margin-bottom:22px;border-bottom:1px solid rgba(255,255,255,.16);
@@ -1708,13 +1712,25 @@ async function sendReport(total, scores, weakest, strongest, tier){
   };
   if (pdfBase64) payload.attachments = [{ name: pdfFilename(), data: pdfBase64 }];
 
-  try {
+  const submit = async body => {
     const res = await fetch('https://api.web3forms.com/submit', {
       method: 'POST',
       headers: { 'Content-Type':'application/json', 'Accept':'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(body)
     });
-    const data = await res.json();
+    return res.json().catch(() => ({ success:false, status:res.status }));
+  };
+
+  try {
+    let data = await submit(payload);
+    /* Si Web3Forms rechaza el adjunto (tamaño o plan), reenviamos sin PDF:
+       lo importante es que el lead llegue al correo. */
+    if (!data.success && payload.attachments){
+      console.warn('[Bosco Checkup] Web3Forms rechazó el envío con PDF, se reintenta sin adjunto:', data);
+      const { attachments, ...plain } = payload;
+      plain.message += '\n\n(El PDF no se pudo adjuntar a este correo.)';
+      data = await submit(plain);
+    }
     if (data.success) say('✓ Reporte enviado — un consultor lo revisará antes de tu sesión', 'ok');
     else { console.error('[Bosco Checkup] Web3Forms:', data); say('No pudimos enviar la copia. Descarga tu PDF arriba.', 'err'); }
   } catch (err) {
