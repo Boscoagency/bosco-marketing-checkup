@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>Marketing Maturity Checkup — Bosco Growth Marketing</title>
+<title>Marketing Maturity Checkup | Bosco Growth Marketing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- La fuente se carga SIN bloquear el render. Un <link rel=stylesheet> normal
@@ -960,10 +960,10 @@ function whatsappURL(total, company){
 
 /* Aliento por bloque — el diagnóstico se siente largo sin esto */
 const NUDGES = [
-  'Empecemos por la raíz — <b>de este bloque depende todo lo demás</b>.',
+  'Empecemos por la raíz: <b>de este bloque depende todo lo demás</b>.',
   'Vas bien. Ahora veamos <b>qué tan memorable</b> eres para tu mercado.',
   'Mitad del camino. Aquí es donde suele esconderse <b>la brecha más cara</b>.',
-  'Cuatro de seis. Los números no opinan — <b>veamos los tuyos</b>.',
+  'Cuatro de seis. Los números no opinan, <b>veamos los tuyos</b>.',
   'Estás a <b>dos pasos</b> de darle un giro al marketing de tu empresa.',
   'Último bloque. Al terminar, <b>descubres tu calificación</b>.'
 ];
@@ -974,11 +974,11 @@ const SPROUT = '<svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 21v
    unidades de siempre (ver regla de tracking). Los valores caen dentro de
    las mismas zonas que usaba el slider (≤15, ≤35, ≤60, ≤85, 100). */
 const OPTIONS = [
-  {value:10,  label:'No, para nada'},
-  {value:30,  label:'Muy poco'},
-  {value:55,  label:'En parte'},
-  {value:80,  label:'En gran medida'},
-  {value:100, label:'Totalmente'}
+  {value:10,  label:'Nada cierto'},
+  {value:30,  label:'Poco cierto'},
+  {value:55,  label:'Más o menos'},
+  {value:80,  label:'Muy cierto'},
+  {value:100, label:'Totalmente cierto'}
 ];
 const zoneLabel = v => OPTIONS.reduce((a,o) => Math.abs(o.value - v) < Math.abs(a.value - v) ? o : a).label;
 const qNum = id => String(id).padStart(2,'0');
@@ -1103,7 +1103,7 @@ function renderIntro(){
       </div>
     ${skewClose}
     <div class="nav">
-      <span class="nav-hint">¿Qué tanto se cumple cada frase en tu empresa? Elige una opción.</span>
+      <span class="nav-hint">¿Qué tan cierta es cada frase en tu empresa? Elige una opción.</span>
     </div>
   `);
   el.querySelector('#start').onclick = () => {
@@ -1238,8 +1238,8 @@ function renderQuiz(){
       // No lo dejamos avanzar, pero sobre todo: le enseñamos cuáles faltan
       hint.classList.add('warn');
       hint.textContent = missing.length === 1
-        ? 'Te falta 1 pregunta — está marcada en ámbar'
-        : `Te faltan ${missing.length} preguntas — están marcadas en ámbar`;
+        ? 'Te falta 1 pregunta. Está marcada en ámbar.'
+        : `Te faltan ${missing.length} preguntas. Están marcadas en ámbar.`;
       missing.forEach(c => { c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash'); });
       try { missing[0].scrollIntoView({ behavior:'smooth', block:'center' }); } catch(e){}
       return;
@@ -1405,7 +1405,7 @@ function renderForm(){
       $('#e-email').textContent = 'Por favor escribe tu correo';
       fail('#f-email','#i-email');
     } else if (!isValidEmail(email)){
-      $('#e-email').textContent = 'Ese correo no parece válido — revísalo';
+      $('#e-email').textContent = 'Ese correo no parece válido, revísalo';
       fail('#f-email','#i-email');
     }
     if (!$('#i-privacy').checked) fail('#f-privacy','#i-privacy');
@@ -1466,9 +1466,9 @@ function renderReport(){
     { min:40, title:'Tu marketing necesita <span class="accent">dirección estratégica</span>',
       sum:'Hay esfuerzo y buena voluntad, pero falta una visión integral que alinee todas las piezas. Sin un líder estratégico, las inversiones de marketing rinden por debajo de su potencial.',
       ctaH:'Necesitas un <span class="accent">CMO estratégico</span>, no más ejecución',
-      ctaP:'Con nuestro modelo CMO as a Service obtienes liderazgo senior dedicado a tu marketing —sin el costo de un CMO de tiempo completo. Conversemos 30 minutos.' },
+      ctaP:'Con nuestro modelo CMO as a Service obtienes liderazgo senior dedicado a tu marketing, sin el costo de un CMO de tiempo completo. Conversemos 30 minutos.' },
     { min:0,  title:'Tu marketing necesita <span class="accent">reconstrucción</span>',
-      sum:'Estás dejando dinero sobre la mesa. Sin fundamentos básicos —estrategia, datos, procesos— cualquier inversión en publicidad o contenido tiene un techo bajo. La buena noticia: hay enorme potencial por desbloquear.',
+      sum:'Estás dejando dinero sobre la mesa. Sin fundamentos básicos (estrategia, datos y procesos), cualquier inversión en publicidad o contenido tiene un techo bajo. La buena noticia: hay enorme potencial por desbloquear.',
       ctaH:'Construyamos las raíces <span class="accent">desde cero, juntos</span>',
       ctaP:'En una sesión de 30 minutos te mostramos exactamente por dónde empezar y qué resultados puedes esperar en 90, 180 y 365 días.' }
   ];
@@ -1488,11 +1488,11 @@ function renderReport(){
   };
   const STRONG = {
     Strategy:'Apalanca tu claridad estratégica para alinear más ejecución.',
-    Brand:'Tu marca es un activo — úsala para diferenciarte en cada contacto con el cliente.',
-    Demand:'Ya te llegan clientes de forma constante — escálalo probando y midiendo.',
-    Data:'Tu cultura de datos es tu ventaja — extiéndela a más decisiones.',
-    Systems:'Tus procesos te dan velocidad — automatiza el siguiente nivel.',
-    Execution:'Tu disciplina de ejecución es rara — es momento de apuntar más alto.'
+    Brand:'Tu marca es un activo. Úsala para diferenciarte en cada contacto con el cliente.',
+    Demand:'Ya te llegan clientes de forma constante. Ahora escálalo probando y midiendo.',
+    Data:'Tu cultura de datos es tu ventaja. Extiéndela a más decisiones.',
+    Systems:'Tus procesos te dan velocidad. Es momento de automatizar más.',
+    Execution:'Pocas empresas ejecutan con tu disciplina. Es momento de apuntar más alto.'
   };
 
   const signals = VALUE_SIGNALS.map(v => {
@@ -1648,7 +1648,7 @@ function renderReport(){
               <span>Hablar por WhatsApp</span>
             </a>
           </div>
-          <p class="cta-note">Respuesta directa con un consultor — sin bots.</p>
+          <p class="cta-note">Te responde directamente un consultor, sin bots.</p>
         </div>
       ${skewClose}
     </div>
@@ -1870,10 +1870,10 @@ async function sendReport(total, scores, weakest, strongest, tier){
     ...scores.map(p => `  · ${p.label}: ${Math.round(p.pct)}% (${p.avg5.toFixed(1)}/5)`),
     '',
     'Top 3 brechas:',
-    ...weakest.map(p => `  · ${p.label} — ${Math.round(p.pct)}%`),
+    ...weakest.map(p => `  · ${p.label}: ${Math.round(p.pct)}%`),
     '',
     'Top 3 fortalezas:',
-    ...strongest.map(p => `  · ${p.label} — ${Math.round(p.pct)}%`),
+    ...strongest.map(p => `  · ${p.label}: ${Math.round(p.pct)}%`),
     '',
     'Señales de valor (lo que el marketing aporta al valor de la empresa):',
     ...VALUE_SIGNALS.map(v => {
@@ -1904,7 +1904,7 @@ async function sendReport(total, scores, weakest, strongest, tier){
 
   const payload = {
     access_key: WEB3FORMS_ACCESS_KEY,
-    subject: `Marketing Checkup — ${lead.company} (${total}/100)`,
+    subject: `Marketing Checkup: ${lead.company} (${total}/100)`,
     from_name: 'Bosco Marketing Checkup',
     email: REPORT_RECIPIENT,
     replyto: lead.email,
@@ -1931,7 +1931,7 @@ async function sendReport(total, scores, weakest, strongest, tier){
       plain.message += '\n\n(El PDF no se pudo adjuntar a este correo.)';
       data = await submit(plain);
     }
-    if (data.success) say('✓ Reporte enviado — un consultor lo revisará antes de tu sesión', 'ok');
+    if (data.success) say('✓ Reporte enviado. Un consultor lo revisará antes de tu sesión.', 'ok');
     else { console.error('[Bosco Checkup] Web3Forms:', data); say('No pudimos enviar la copia. Descarga tu PDF arriba.', 'err'); }
   } catch (err) {
     console.error('[Bosco Checkup] Falló el envío:', err);
