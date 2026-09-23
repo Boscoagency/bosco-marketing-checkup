@@ -408,6 +408,8 @@ h2{font-weight:700;font-size:clamp(26px,3.4vw,38px);line-height:1.08;letter-spac
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:30px}
 @media(max-width:640px){.form-grid{grid-template-columns:1fr}}
 .field.full{grid-column:1/-1}
+.field label em{font-style:normal;font-weight:500;letter-spacing:.02em;text-transform:none;color:rgba(232,242,233,.55)}
+.phone-row{display:grid;grid-template-columns:minmax(128px,42%) 1fr;gap:8px}
 .field label{display:block;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(232,242,233,.75);margin-bottom:9px}
 .field input,.field select{
   width:100%;padding:15px 17px;border-radius:var(--r-sm);
@@ -526,6 +528,16 @@ h2{font-weight:700;font-size:clamp(26px,3.4vw,38px);line-height:1.08;letter-spac
 }
 .ins li b{color:#fff;font-weight:600}
 
+.val-sub{font-size:16px;line-height:1.55;color:rgba(232,242,233,.74);margin:-12px 0 20px;max-width:640px}
+.val{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:760px){.val{grid-template-columns:1fr}}
+.val li{display:flex;gap:13px;align-items:flex-start;padding:15px 16px;border-radius:var(--r-sm);
+  font-size:16px;line-height:1.5;color:rgba(232,242,233,.9);border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.035)}
+.val .chip{flex-shrink:0;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:999px;margin-top:1px}
+.val li.risk{border-color:rgba(196,99,58,.45);background:rgba(196,99,58,.08)}
+.val li.risk .chip{color:#F2B39A;background:rgba(196,99,58,.2);border:1px solid rgba(196,99,58,.5)}
+.val li.ok .chip{color:var(--ink);background:var(--leaf);border:1px solid var(--leaf)}
+
 /* Acordeón */
 .sect-title{
   font-size:23px;font-weight:700;letter-spacing:-.028em;color:#fff;
@@ -631,7 +643,7 @@ body.pdf-mode .rev{opacity:1!important;transform:none!important;filter:none!impo
 body.pdf-mode .radar .poly,body.pdf-mode .ring-wrap .rejilla{transform:none!important;opacity:1!important}
 body.pdf-mode .radar-lbl,body.pdf-mode .radar-val{opacity:1!important}
 body.pdf-mode .skew{margin:0 0 18px}
-body.pdf-mode .acc{break-inside:avoid}
+body.pdf-mode .acc,body.pdf-mode .val li{break-inside:avoid}
 
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
@@ -675,25 +687,32 @@ body.pdf-mode .acc{break-inside:avoid}
 /* ═══════════════════════════════════════════════════════════
    DATOS — 6 pilares / 20 preguntas (idénticos a la v1)
    ═══════════════════════════════════════════════════════════ */
+/* v3 (sep 2026): 24 preguntas, 4 por pilar, una sola idea por pregunta.
+   Se agregaron señales que pesan en el VALOR de la empresa (concentración de
+   clientes, poder de precio, dependencia del dueño, predictibilidad), útiles
+   para cualquier negocio y para audiencias de dirección/finanzas.
+   Los scores de antes del 23 sep 2026 no son 1:1 comparables con estos. */
 const PILLARS = [
   {
     name:'Strategy', label:'Estrategia',
-    subtitle:'A quién le vendes, por qué te eligen, hacia dónde vas.',
+    subtitle:'A quién le vendes, por qué te eligen y hacia dónde vas.',
     g1:'#A8CC57', g2:'#2E6B4F',
     questions:[
-      'Tenemos bien identificado quién es nuestro cliente ideal (a quién le vendemos mejor y por qué), y todo el equipo de ventas y marketing lo tiene claro.',
-      'Sabemos explicar en pocas palabras por qué un cliente nos debe elegir a nosotros y no a la competencia, y lo decimos igual en todos lados.',
-      'Tenemos escrito a dónde queremos llegar este año y en los próximos tres, y la dirección de la empresa lo conoce.'
+      'Tenemos definido quién es nuestro cliente ideal: a quién le vendemos mejor y por qué nos compra.',
+      'Sabemos explicar en una frase por qué un cliente nos debe elegir a nosotros y no a la competencia.',
+      'Tenemos metas de ventas y de marketing por escrito para este año, y la dirección les da seguimiento.',
+      'Nuestras ventas están bien repartidas: si perdiéramos a nuestro cliente más grande, la empresa seguiría estable.'
     ]
   },
   {
     name:'Brand', label:'Marca',
-    subtitle:'Coherencia, reconocimiento y memorabilidad.',
+    subtitle:'Cómo te reconocen, qué opinan de ti y cuánto te permite cobrar.',
     g1:'#E0A340', g2:'#1B4534',
     questions:[
-      'Tenemos un manual de marca actualizado (logo, colores, tipografías y forma de hablar) y el equipo lo usa.',
-      'Nuestra empresa se ve y se siente igual en todos lados: sitio web, redes sociales, materiales de venta, empaque y trato al cliente.',
-      'En el último año preguntamos o medimos qué tanto nos conoce nuestro mercado y qué opina de nosotros.'
+      'Nuestra empresa se ve y se comunica igual en todos lados: sitio web, redes, propuestas, instalaciones y trato al cliente.',
+      'Tenemos un manual de marca (logo, colores y forma de comunicar) y el equipo lo usa.',
+      'Podemos cobrar igual o más que la competencia sin perder clientes, porque nos perciben como la mejor opción.',
+      'En el último año preguntamos a nuestros clientes qué opinan de nosotros y cambiamos algo con base en eso.'
     ]
   },
   {
@@ -701,10 +720,10 @@ const PILLARS = [
     subtitle:'Que lleguen clientes potenciales cada mes, sin depender de la suerte.',
     g1:'#A8CC57', g2:'#173F30',
     questions:[
-      'Tenemos escrito el camino que sigue una persona desde que nos conoce hasta que nos compra, y sabemos qué hace en cada etapa.',
-      'Cada mes llegan suficientes clientes potenciales interesados para cumplir nuestras metas de venta, y no depende de la suerte.',
-      'Publicamos contenido de forma constante siguiendo un calendario, no solo cuando queda tiempo.',
-      'Sabemos qué medio nos trae los mejores clientes y cuánto nos cuesta conseguir uno por cada medio, y movemos el presupuesto con base en eso.'
+      'Cada mes llegan suficientes clientes potenciales para cumplir nuestras metas de venta.',
+      'Los clientes nuevos no dependen solo del dueño o de un par de personas clave: la empresa genera oportunidades por sí misma.',
+      'Nuestro sitio web genera contactos: la gente que lo visita nos escribe o nos deja sus datos.',
+      'Pedimos recomendaciones y reseñas a nuestros clientes de forma constante, no solo cuando se da.'
     ]
   },
   {
@@ -712,32 +731,49 @@ const PILLARS = [
     subtitle:'Mides lo que importa y decides con base en eso.',
     g1:'#4F8C68', g2:'#A8CC57',
     questions:[
-      'Tenemos un tablero o reporte con los números clave de marketing y lo revisamos cada semana o cada mes sin falta.',
-      'Sabemos cuánto nos cuesta conseguir un cliente nuevo, cuánto dinero nos deja en total ese cliente y cuánto nos regresa cada campaña.',
-      'Antes de lanzar una campaña definimos qué resultado esperamos, y al terminar revisamos si se cumplió y qué aprendimos.'
+      'Cada mes revisamos un reporte con los números clave de marketing y ventas.',
+      'Sabemos cuánto nos cuesta conseguir un cliente nuevo.',
+      'Sabemos cuánto dinero nos deja un cliente durante todo el tiempo que trabaja con nosotros.',
+      'Sabemos qué medio o campaña nos trae los mejores clientes, y movemos el presupuesto con base en eso.'
     ]
   },
   {
     name:'Systems', label:'Sistemas',
-    subtitle:'Procesos por escrito y herramientas que trabajan juntas.',
+    subtitle:'Procesos y herramientas que no dependen de la memoria de nadie.',
     g1:'#2E6B4F', g2:'#EFC072',
     questions:[
-      'Llevamos el seguimiento de clientes y prospectos en un sistema actualizado (un CRM), conectado con nuestras demás herramientas.',
-      'Las tareas de marketing que se repiten están escritas paso a paso, para que cualquier persona nueva las pueda hacer.',
-      'Marketing y ventas se pasan los prospectos con reglas claras: ambos saben cuándo un contacto ya está listo para que ventas lo llame.'
+      'Registramos a todos los clientes y prospectos en un sistema (un CRM) que se mantiene al día.',
+      'Le respondemos a un prospecto nuevo el mismo día, por el medio que él prefiera (llamada, correo o WhatsApp).',
+      'Marketing y ventas tienen reglas claras sobre cuándo un contacto está listo para que ventas lo busque.',
+      'Nuestros procesos de marketing y ventas están por escrito y seguirían funcionando si mañana se va una persona clave.'
     ]
   },
   {
     name:'Execution', label:'Ejecución',
-    subtitle:'Las cosas pasan, a tiempo, con el equipo correcto.',
+    subtitle:'Las cosas pasan, a tiempo, con el equipo y el presupuesto correctos.',
     g1:'#A8CC57', g2:'#4F8C68',
     questions:[
-      'Cada tres meses definimos entre 3 y 7 prioridades de marketing, por escrito, con un responsable y una fecha de entrega.',
-      'Cada proyecto de marketing tiene una persona claramente responsable de que suceda y de su resultado.',
-      'El equipo de marketing se reúne de forma regular (cada semana y cada trimestre) para revisar avances y destrabar pendientes.',
-      'Alguien con experiencia y visión de negocio dirige nuestro marketing, no solo se encarga de ejecutar tareas.'
+      'Tenemos un presupuesto de marketing definido para el año; no se decide sobre la marcha.',
+      'Cada trimestre definimos pocas prioridades de marketing, cada una con un responsable y una fecha de entrega.',
+      'El equipo de marketing se reúne cada semana para revisar avances y destrabar pendientes.',
+      'Alguien con experiencia define la estrategia de marketing y responde por los resultados, no solo ejecuta tareas.'
     ]
   }
+];
+
+/* Señales de valor: preguntas que un inversionista o comprador miraría.
+   El reporte las traduce a "a favor" (≥80, "En gran medida" o más) o "riesgo". */
+const VALUE_SIGNALS = [
+  { q:4,  risk:'Tus ventas dependen de pocos clientes: perder uno pesaría mucho, y eso baja lo que vale tu empresa.',
+          ok:'Tus ventas están bien repartidas: no dependes de un solo cliente.' },
+  { q:7,  risk:'Compites más por precio que por valor: tu marca todavía no te permite cobrar más.',
+          ok:'Tu marca te permite cobrar igual o más que la competencia.' },
+  { q:9,  risk:'La llegada de clientes no es predecible mes a mes, y lo que no es predecible vale menos.',
+          ok:'Te llegan clientes de forma predecible cada mes.' },
+  { q:10, risk:'Las ventas dependen del dueño o de pocas personas: si faltan, el negocio se frena.',
+          ok:'La empresa genera oportunidades sin depender del dueño.' },
+  { q:20, risk:'Tus procesos viven en la cabeza de algunas personas, no por escrito.',
+          ok:'Tus procesos están por escrito y no dependen de una sola persona.' }
 ];
 
 const BOOKING_URL = 'https://outlook.office.com/bookwithme/user/81e50597c0b14c92ad866727bf2f0835@boscoagency.com/meetingtype/SndEdSiMNEyMal5kN2GPIw2?bookingcode=0edc256b-86f3-40f0-92b8-36c0423d10f5&anonymous&ep=mlink';
@@ -803,8 +839,7 @@ async function sha256Hex(value){
 async function hashedLeadIdentifiers(l){
   if (!SEND_HASHED_IDENTIFIERS || !l || !l.marketingConsent) return {};
   const email = (l.email || '').trim().toLowerCase();
-  let phone = (l.phoneDigits || '').replace(/\D/g,'');
-  if (phone.length === 10) phone = '52' + phone;   // México, 10 dígitos nacionales
+  const phone = (l.phoneFull || '').replace(/\D/g,'');   // lada + número, sin '+'
   /* OJO: Meta y Google normalizan el teléfono distinto ANTES de hashear.
      Meta lo quiere sin '+' (528112345678); Google exige E.164 con '+'
      (+528112345678). Un solo hash no le sirve a los dos, por eso van ambos. */
@@ -819,6 +854,38 @@ async function hashedLeadIdentifiers(l){
   if (phE164) out.ph_e164 = phE164;
   return out;
 }
+
+/* Teléfono internacional. El número se guarda como lada + número nacional,
+   que es justo el formato que Meta (sin '+') y Google (con '+') hashean.
+   Para México el resultado es idéntico al de antes (52 + 10 dígitos). */
+const COUNTRIES = [
+  ['MX','México',        '52', 10,10,'81 1234 5678'],
+  ['PA','Panamá',        '507', 7, 8,'6123 4567'],
+  ['CO','Colombia',      '57', 10,10,'300 123 4567'],
+  ['CR','Costa Rica',    '506', 8, 8,'8123 4567'],
+  ['GT','Guatemala',     '502', 8, 8,'5123 4567'],
+  ['SV','El Salvador',   '503', 8, 8,'7123 4567'],
+  ['HN','Honduras',      '504', 8, 8,'9123 4567'],
+  ['NI','Nicaragua',     '505', 8, 8,'8123 4567'],
+  ['DO','Rep. Dominicana','1',  10,10,'809 123 4567'],
+  ['PE','Perú',          '51',  9, 9,'912 345 678'],
+  ['CL','Chile',         '56',  9, 9,'9 1234 5678'],
+  ['AR','Argentina',     '54', 10,11,'11 2345 6789'],
+  ['EC','Ecuador',       '593', 9, 9,'99 123 4567'],
+  ['VE','Venezuela',     '58', 10,10,'412 123 4567'],
+  ['US','EE. UU. / Canadá','1', 10,10,'305 123 4567'],
+  ['ES','España',        '34',  9, 9,'612 34 56 78'],
+  ['XX','Otro país',     '',    8,15,'Lada + número']
+];
+/* País por defecto según la zona horaria del navegador; si no, México */
+const defaultCountry = (() => {
+  const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone || '');
+  const map = { 'America/Panama':'PA','America/Bogota':'CO','America/Costa_Rica':'CR','America/Guatemala':'GT',
+    'America/El_Salvador':'SV','America/Tegucigalpa':'HN','America/Managua':'NI','America/Santo_Domingo':'DO',
+    'America/Lima':'PE','America/Santiago':'CL','America/Argentina/Buenos_Aires':'AR','America/Guayaquil':'EC',
+    'America/Caracas':'VE','Europe/Madrid':'ES' };
+  return map[tz] || 'MX';
+})();
 
 /* Banda de score — la usan las audiencias de remarketing para separar
    "empresa con marketing roto" de "empresa ya madura". */
@@ -859,11 +926,11 @@ const SPROUT = '<svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 21v
    unidades de siempre (ver regla de tracking). Los valores caen dentro de
    las mismas zonas que usaba el slider (≤15, ≤35, ≤60, ≤85, 100). */
 const OPTIONS = [
-  {value:10,  label:'No lo tenemos'},
-  {value:30,  label:'Apenas empezamos'},
-  {value:55,  label:'A medias, sin constancia'},
-  {value:80,  label:'Sí, y funciona bien'},
-  {value:100, label:'Es una de nuestras fortalezas'}
+  {value:10,  label:'No, para nada'},
+  {value:30,  label:'Muy poco'},
+  {value:55,  label:'En parte'},
+  {value:80,  label:'En gran medida'},
+  {value:100, label:'Totalmente'}
 ];
 const zoneLabel = v => OPTIONS.reduce((a,o) => Math.abs(o.value - v) < Math.abs(a.value - v) ? o : a).label;
 const qNum = id => String(id).padStart(2,'0');
@@ -978,7 +1045,7 @@ function renderIntro(){
   const el = mount(`
     ${skewOpen('#A8CC57','#2E6B4F')}
       <div class="intro-body">
-        <div class="eyebrow">Diagnóstico gratuito · 5 minutos</div>
+        <div class="eyebrow">Diagnóstico gratuito · 6 minutos</div>
         <h1>No puedes dirigir lo que no mides. <span class="accent">Mide tu marketing hoy.</span></h1>
         <p class="lede">Evalúa los 6 pilares de tu estrategia y recibe tu calificación al instante.</p>
         <div class="intro-cta">
@@ -988,7 +1055,7 @@ function renderIntro(){
       </div>
     ${skewClose}
     <div class="nav">
-      <span class="nav-hint">Elige en cada pregunta la opción que mejor describe a tu empresa.</span>
+      <span class="nav-hint">¿Qué tanto se cumple cada frase en tu empresa? Elige una opción.</span>
     </div>
   `);
   el.querySelector('#start').onclick = () => {
@@ -1161,6 +1228,10 @@ function renderForm(){
             <input type="text" id="i-company" placeholder="Nombre de tu empresa" autocomplete="organization">
             <div class="err">Por favor escribe el nombre de tu empresa</div>
           </div>
+          <div class="field" id="f-role">
+            <label for="i-role">Cargo <em>(opcional)</em></label>
+            <input type="text" id="i-role" placeholder="Ej. Director General" autocomplete="organization-title">
+          </div>
           <div class="field" id="f-emp">
             <label for="i-emp">Número de empleados</label>
             <select id="i-emp">
@@ -1172,13 +1243,30 @@ function renderForm(){
           </div>
           <div class="field" id="f-phone">
             <label for="i-phone">Teléfono / WhatsApp</label>
-            <input type="tel" id="i-phone" placeholder="81 1234 5678" autocomplete="tel" inputmode="tel">
-            <div class="err" id="e-phone">Escribe un teléfono a 10 dígitos</div>
+            <div class="phone-row">
+              <select id="i-cc" aria-label="País">
+                ${COUNTRIES.map(c => `<option value="${c[0]}"${c[0] === defaultCountry ? ' selected' : ''}>${c[1]}${c[2] ? ' +' + c[2] : ''}</option>`).join('')}
+              </select>
+              <input type="tel" id="i-phone" placeholder="${COUNTRIES.find(c => c[0] === defaultCountry)[5]}" autocomplete="tel-national" inputmode="tel">
+            </div>
+            <div class="err" id="e-phone">Revisa tu teléfono</div>
           </div>
-          <div class="field full" id="f-email">
+          <div class="field" id="f-email">
             <label for="i-email">Correo electrónico</label>
             <input type="email" id="i-email" placeholder="tu@correo.com" autocomplete="email">
             <div class="err" id="e-email">Escribe un correo válido</div>
+          </div>
+          <div class="field full" id="f-goal">
+            <label for="i-goal">Tu mayor reto de marketing hoy <em>(opcional)</em></label>
+            <select id="i-goal">
+              <option value="" selected>Selecciona una opción</option>
+              <option>Conseguir más clientes</option>
+              <option>Diferenciarnos de la competencia</option>
+              <option>Saber qué funciona y qué no</option>
+              <option>Ordenar al equipo y los procesos</option>
+              <option>Crecer sin depender del dueño</option>
+              <option>Prepararnos para inversión o venta de la empresa</option>
+            </select>
           </div>
         </div>
 
@@ -1212,6 +1300,12 @@ function renderForm(){
   });
   $('#i-privacy').addEventListener('change', () => { if ($('#i-privacy').checked) $('#f-privacy').classList.remove('error'); });
 
+  $('#i-cc').addEventListener('change', () => {
+    const c = COUNTRIES.find(x => x[0] === $('#i-cc').value);
+    $('#i-phone').placeholder = c[5];
+    $('#f-phone').classList.remove('error');
+  });
+
   $('#back').onclick = () => go(QUIZ_STEP);
   $('#submit').onclick = () => {
     let first = null;
@@ -1222,13 +1316,21 @@ function renderForm(){
     if (!$('#i-emp').value)            fail('#f-emp','#i-emp');
 
     // Teléfono: aceptamos formato libre, exigimos 10 dígitos reales
-    const phone = $('#i-phone').value.trim();
-    const phoneDigits = phone.replace(/\D/g,'');
-    if (!phone){
+    const country = COUNTRIES.find(x => x[0] === $('#i-cc').value) || COUNTRIES[0];
+    const [, , cc, minLen, maxLen] = country;
+    const phoneRaw = $('#i-phone').value.trim();
+    let phoneDigits = phoneRaw.replace(/\D/g,'');
+    // Si lo escribió con la lada incluida, se la quitamos
+    if (cc && phoneDigits.startsWith(cc) && phoneDigits.length > maxLen) phoneDigits = phoneDigits.slice(cc.length);
+    const phoneFull = cc + phoneDigits;
+    const phone = (cc ? '+' + cc + ' ' : '+') + phoneDigits;
+    if (!phoneRaw){
       $('#e-phone').textContent = 'Por favor escribe tu teléfono';
       fail('#f-phone','#i-phone');
-    } else if (phoneDigits.length < 10){
-      $('#e-phone').textContent = 'Escribe un teléfono a 10 dígitos';
+    } else if (phoneDigits.length < minLen || phoneDigits.length > maxLen){
+      $('#e-phone').textContent = minLen === maxLen
+        ? `Para ${country[1]} el número lleva ${minLen} dígitos`
+        : (cc ? `Para ${country[1]} el número lleva de ${minLen} a ${maxLen} dígitos` : 'Escribe la lada de tu país y tu número');
       fail('#f-phone','#i-phone');
     }
 
@@ -1250,6 +1352,10 @@ function renderForm(){
       employees: $('#i-emp').value,
       phone,
       phoneDigits,
+      phoneFull,
+      country: country[1],
+      role: $('#i-role').value.trim(),
+      goal: $('#i-goal').value,
       email,
       marketingConsent: $('#i-mkt').checked
     };
@@ -1303,12 +1409,12 @@ function renderReport(){
              :               { c1:'#C4633A', c2:'#E0A340' };
 
   const WEAK = {
-    Strategy:'Definir a tu cliente ideal, por qué te deben elegir y tus metas a 1 y 3 años.',
-    Brand:'Revisar que tu marca se vea igual en todos lados y crear o actualizar tu manual de marca.',
-    Demand:'Trazar el camino de compra de tu cliente, con medios, contenido y números claros.',
-    Data:'Armar un tablero con cuánto cuesta conseguir un cliente, cuánto te deja y cuánto regresa cada campaña.',
-    Systems:'Poner en marcha un CRM, escribir los procesos paso a paso y acordar cuándo marketing le pasa un prospecto a ventas.',
-    Execution:'Planear cada trimestre con prioridades claras y alguien con experiencia al frente.'
+    Strategy:'Definir a tu cliente ideal, por qué te deben elegir y metas por escrito, y bajar la dependencia de pocos clientes.',
+    Brand:'Unificar cómo se ve y se comunica tu marca, y escuchar a tus clientes para poder cobrar lo que vales.',
+    Demand:'Crear fuentes de clientes que no dependan del dueño: un sitio que genere contactos, recomendaciones y medios medibles.',
+    Data:'Armar un reporte mensual con cuánto cuesta conseguir un cliente, cuánto te deja y qué medio funciona mejor.',
+    Systems:'Poner en marcha un CRM, responder a prospectos el mismo día y escribir los procesos para que no dependan de una persona.',
+    Execution:'Definir un presupuesto anual, prioridades trimestrales con responsable y alguien con experiencia al frente.'
   };
   const STRONG = {
     Strategy:'Apalanca tu claridad estratégica para alinear más ejecución.',
@@ -1318,6 +1424,13 @@ function renderReport(){
     Systems:'Tus procesos te dan velocidad — automatiza el siguiente nivel.',
     Execution:'Tu disciplina de ejecución es rara — es momento de apuntar más alto.'
   };
+
+  const signals = VALUE_SIGNALS.map(v => {
+    const q = state.find(x => x.id === v.q);
+    const ok = q.value >= 80;
+    return { ok, text: ok ? v.ok : v.risk };
+  }).sort((a,b) => a.ok - b.ok);   // riesgos primero
+  const risks = signals.filter(x => !x.ok).length;
 
   const sorted   = [...scores].sort((a,b) => a.pct - b.pct);
   const weakest  = sorted.slice(0,3);
@@ -1435,6 +1548,14 @@ function renderReport(){
         <h4>Sobre lo que puedes construir</h4>
         <ul>${strongest.map(p => `<li><div><b>${p.label}</b> · ${STRONG[p.name]}</div></li>`).join('')}</ul>
       </div>
+    </div>
+
+    <div class="glass card rev" style="--d:540;margin-top:18px">
+      <h3>Lo que vería un inversionista</h3>
+      <p class="val-sub">${risks
+        ? `Detectamos <b style="color:#fff">${risks} de ${signals.length}</b> señales que hoy le restan valor a tu empresa, no solo ventas. Son las que un comprador o socio revisaría primero.`
+        : 'Tus respuestas no muestran señales que le resten valor a tu empresa. Son las que un comprador o socio revisaría primero.'}</p>
+      <ul class="val">${signals.map(x => `<li class="${x.ok ? 'ok' : 'risk'}"><span class="chip">${x.ok ? 'A favor' : 'Riesgo'}</span><span>${x.text}</span></li>`).join('')}</ul>
     </div>
 
     <div class="rev" style="--d:620;margin-top:26px">
@@ -1662,9 +1783,12 @@ async function sendReport(total, scores, weakest, strongest, tier){
   const summary = [
     `Nombre: ${lead.name}`,
     `Empresa: ${lead.company}`,
+    `Cargo: ${lead.role || '—'}`,
     `Número de empleados: ${lead.employees}`,
+    `Mayor reto: ${lead.goal || '—'}`,
+    `País: ${lead.country}`,
     `Teléfono / WhatsApp: ${lead.phone}`,
-    `Escribirle por WhatsApp: https://wa.me/${lead.phoneDigits.length === 10 ? '52' + lead.phoneDigits : lead.phoneDigits}`,
+    `Escribirle por WhatsApp: https://wa.me/${lead.phoneFull}`,
     `Correo: ${lead.email}`,
     `Aviso de Privacidad: aceptado`,
     `Acepta comunicaciones comerciales: ${lead.marketingConsent ? 'Sí' : 'No'}`,
@@ -1680,6 +1804,12 @@ async function sendReport(total, scores, weakest, strongest, tier){
     '',
     'Top 3 fortalezas:',
     ...strongest.map(p => `  · ${p.label} — ${Math.round(p.pct)}%`),
+    '',
+    'Señales de valor (lo que vería un inversionista):',
+    ...VALUE_SIGNALS.map(v => {
+      const q = state.find(x => x.id === v.q);
+      return `  ${q.value >= 80 ? '✓ A favor' : '✗ Riesgo  '} · ${q.value >= 80 ? v.ok : v.risk}`;
+    }),
     '',
     `WhatsApp del prospecto: ${whatsappURL(total, lead.company)}`,
     '',
@@ -1811,7 +1941,7 @@ if (location.hash === '#demo'){
   const sample = [82,74,90,55,48,61,66,40,52,71,35,58,44,77,63,49,80,57,68,42];
   state.forEach((q,i) => { q.value = sample[i % sample.length]; q.touched = true; });
   lead = { name:'Vista de ejemplo', company:'Empresa Demo', employees:'11 – 50',
-           phone:'', phoneDigits:'', email:'', marketingConsent:false, demo:true };
+           phone:'', phoneDigits:'', phoneFull:'', country:'', role:'', goal:'', email:'', marketingConsent:false, demo:true };
   go(REPORT_STEP);
 } else {
   /* Cargó la herramienta. Es el denominador del embudo: cuánta gente
