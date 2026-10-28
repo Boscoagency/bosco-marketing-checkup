@@ -944,9 +944,46 @@ function scoreBand(total){
   return 'reconstruccion';
 }
 
-/* Envío del reporte — Web3Forms (https://web3forms.com) */
-const WEB3FORMS_ACCESS_KEY = '7117509a-b2e7-4286-9f63-dfcd233063aa';
-const REPORT_RECIPIENT = 'info@boscoagency.com';
+/* Envío del lead: directo al CRM de Odoo de Bosco, a una regla de
+   automatización con disparador webhook (Bosco: leads de la web al CRM).
+   Odoo no manda encabezados CORS, así que enviamos en modo no-cors con
+   Content-Type text/plain; Odoo 18 lee el cuerpo como JSON de todos modos.
+   La contra: desde aquí no vemos si Odoo respondió bien. Por eso la regla
+   guarda un registro de cada llamada en Odoo (Log Calls). */
+const ODOO_WEBHOOK_URL = 'https://flintconsulting.odoo.com/web/hook/b5c8d01a-6fe0-4145-8d4f-51504ea28895';
+
+/* Atribución del lead (fuente, medio, campaña, gclid/fbclid).
+   La guarda atribucion.js en boscoagency.com y nos la pasa por postMessage
+   cuando la pedimos, porque desde el iframe no vemos la URL del sitio. Si
+   alguien abre el diagnóstico directo en GitHub Pages, leemos los
+   parámetros de nuestra propia URL. */
+const ATRIBUCION_CAMPOS = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term',
+  'gclid','gbraid','wbraid','fbclid','landing_page','referrer_host','primer_contacto','pagina'];
+let atribucion = (() => {
+  const q = new URLSearchParams(location.search), out = {};
+  ATRIBUCION_CAMPOS.forEach(k => { const v = q.get(k); if (v) out[k] = v.slice(0,300); });
+  return out;
+})();
+let atribucionEspera = null;
+window.addEventListener('message', e => {
+  if (!ALLOWED_PARENT_ORIGINS.has(e.origin) || e.source !== window.parent) return;
+  const d = e.data;
+  if (!d || d.source !== 'bosco-sitio' || d.type !== 'atribucion' || !d.datos || typeof d.datos !== 'object') return;
+  const limpia = {};
+  ATRIBUCION_CAMPOS.forEach(k => { if (d.datos[k]) limpia[k] = String(d.datos[k]).slice(0,300); });
+  if (Object.keys(limpia).length) atribucion = limpia; // el sitio manda la visita completa
+  if (atribucionEspera){ atribucionEspera(); atribucionEspera = null; }
+});
+/* El mensaje no lleva `event`, así que el puente de tracking de Webflow lo
+   ignora y no lo manda a GA4 ni a Meta. Si el sitio no contesta, seguimos. */
+function pedirAtribucion(ms = 700){
+  if (window.parent === window) return Promise.resolve();
+  return new Promise(resolve => {
+    atribucionEspera = resolve;
+    postToParent({ source: CHECKUP_MESSAGE_SOURCE, type: 'atribucion-pedido' });
+    setTimeout(resolve, ms);
+  });
+}
 
 /* Mensaje precargado de WhatsApp — se personaliza con score y empresa */
 function whatsappURL(total, company){
@@ -1420,10 +1457,12 @@ function renderForm(){
       phoneDigits,
       phoneFull,
       country: country[1],
+      countryCode: country[0],
       role: $('#i-role').value.trim(),
       goal: $('#i-goal').value,
       email,
-      marketingConsent: $('#i-mkt').checked
+      marketingConsent: $('#i-mkt').checked,
+      envioId: newEventId()   // une el lead y su PDF dentro de Odoo
     };
     /* El hash es asíncrono, así que el evento se emite dentro del .then()
        para que los identificadores viajen en el MISMO mensaje que el Lead —
@@ -1748,8 +1787,11 @@ function renderReport(){
     go(0);
   };
 
-  // Envío automático al equipo Bosco — espera a que terminen las animaciones
-  setTimeout(() => sendReport(total, scores, weakest, strongest, tier), 2600);
+  /* Envío al CRM de Bosco: el lead sale en cuanto se muestra el reporte, para
+     no perderlo si cierran la pestaña. El PDF se genera después de las
+     animaciones y se adjunta a esa misma oportunidad en Odoo. */
+  const envioLead = sendReport(total, scores, weakest, strongest, tier);
+  setTimeout(() => sendPdf(envioLead), 2600);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1836,107 +1878,100 @@ async function sendReport(total, scores, weakest, strongest, tier){
     status.innerHTML = (cls ? '' : '<span class="spin"></span>') + text;
   };
 
-  if (!lead || lead.demo) return; // #demo nunca dispara correo
-  if (!WEB3FORMS_ACCESS_KEY || WEB3FORMS_ACCESS_KEY.startsWith('REEMPLAZA')){
-    console.warn('[Bosco Checkup] Falta el Access Key de Web3Forms — no se envía el correo.');
-    return;
+  if (!lead || lead.demo) return false; // #demo nunca crea leads
+  if (!ODOO_WEBHOOK_URL || ODOO_WEBHOOK_URL.startsWith('REEMPLAZA')){
+    console.warn('[Bosco Checkup] Falta la URL del webhook de Odoo: el lead no se envía.');
+    return false;
   }
 
   say('Enviando copia al equipo Bosco…');
+  await pedirAtribucion();   // por si el sitio no alcanzó a contestar al cargar
 
-  const detail = scores.flatMap(p => [
-    '',
-    `── ${p.label.toUpperCase()} (${Math.round(p.pct)}% · ${p.avg5.toFixed(1)}/5) ──`,
-    ...p.qs.map(q => `  [${String(q.value).padStart(3,' ')}% | ${(q.value/20).toFixed(1)}/5]  ${qNum(q.id)}. ${q.text}\n        → ${zoneLabel(q.value)}`)
+  const detalle = scores.flatMap(p => [
+    `${p.label.toUpperCase()} (${Math.round(p.pct)}%, ${p.avg5.toFixed(1)}/5)`,
+    ...p.qs.map(q => `[${q.value}% | ${(q.value/20).toFixed(1)}/5] ${qNum(q.id)}. ${q.text} → ${zoneLabel(q.value)}`)
   ]);
 
-  const summary = [
-    `Nombre: ${lead.name}`,
-    `Empresa: ${lead.company}`,
-    `Cargo: ${lead.role || '—'}`,
-    `Número de empleados: ${lead.employees}`,
-    `Mayor reto: ${lead.goal || '—'}`,
-    `País: ${lead.country}`,
-    `Teléfono / WhatsApp: ${lead.phone}`,
-    `Escribirle por WhatsApp: https://wa.me/${lead.phoneFull}`,
-    `Correo: ${lead.email}`,
-    `Aviso de Privacidad: aceptado`,
-    `Acepta comunicaciones comerciales: ${lead.marketingConsent ? 'Sí' : 'No'}`,
-    '',
-    `Score total: ${total}/100`,
-    `Tier: ${tier.title.replace(/<[^>]+>/g,'')}`,
-    '',
-    'Score por pilar:',
-    ...scores.map(p => `  · ${p.label}: ${Math.round(p.pct)}% (${p.avg5.toFixed(1)}/5)`),
-    '',
-    'Top 3 brechas:',
-    ...weakest.map(p => `  · ${p.label}: ${Math.round(p.pct)}%`),
-    '',
-    'Top 3 fortalezas:',
-    ...strongest.map(p => `  · ${p.label}: ${Math.round(p.pct)}%`),
-    '',
-    'Señales de valor (lo que el marketing aporta al valor de la empresa):',
-    ...VALUE_SIGNALS.map(v => {
-      const q = state.find(x => x.id === v.q);
-      return `  ${q.value >= 80 ? '✓ A favor' : '✗ Riesgo  '} · ${q.value >= 80 ? v.ok : v.risk}`;
-    }),
-    '',
-    `WhatsApp del prospecto: ${whatsappURL(total, lead.company)}`,
-    '',
-    '═══════════════════════════════════════',
-    'DETALLE DE RESPUESTAS (5 opciones, equivalente 0–100%)',
-    '═══════════════════════════════════════',
-    ...detail
-  ].join('\n');
+  /* Odoo arma la descripción de la oportunidad con estas secciones: así,
+     si cambian las preguntas o los textos, no hay que tocar Odoo. */
+  const secciones = [
+    { titulo: 'Score por pilar',
+      lineas: scores.map(p => `${p.label}: ${Math.round(p.pct)}% (${p.avg5.toFixed(1)}/5)`) },
+    { titulo: 'Top 3 brechas',
+      lineas: weakest.map(p => `${p.label}: ${Math.round(p.pct)}%`) },
+    { titulo: 'Top 3 fortalezas',
+      lineas: strongest.map(p => `${p.label}: ${Math.round(p.pct)}%`) },
+    { titulo: 'Señales de valor (lo que el marketing aporta al valor de la empresa)',
+      lineas: VALUE_SIGNALS.map(v => {
+        const q = state.find(x => x.id === v.q);
+        return `${q.value >= 80 ? '✓ A favor' : '✗ Riesgo'}: ${q.value >= 80 ? v.ok : v.risk}`;
+      }) },
+    { titulo: 'Detalle de respuestas (5 opciones, equivalente de 0 a 100%)', lineas: detalle }
+  ];
 
-  let pdfBase64 = null;
+  try {
+    await enviarAOdoo({
+      origen: 'marketing-checkup',
+      tipo: 'lead',
+      envio: lead.envioId,
+      nombre: lead.name,
+      empresa: lead.company,
+      cargo: lead.role,
+      empleados: lead.employees,
+      reto: lead.goal,
+      pais: lead.country,
+      pais_codigo: lead.countryCode,
+      telefono: lead.phone,
+      telefono_completo: lead.phoneFull,
+      correo: lead.email,
+      privacidad: true,
+      comunicaciones: lead.marketingConsent,
+      score: total,
+      nivel: tier.title.replace(/<[^>]+>/g,''),
+      banda: scoreBand(total),
+      secciones,
+      atribucion
+    }, true);
+    say('✓ Reporte enviado. Un consultor lo revisará antes de tu sesión.', 'ok');
+    return true;
+  } catch (err) {
+    console.error('[Bosco Checkup] Falló el envío a Odoo:', err);
+    say('No pudimos enviar la copia. Descarga tu PDF arriba.', 'err');
+    return false;
+  }
+}
+
+/* El PDF se adjunta en un segundo envío para que un PDF pesado o un fallo
+   de html2pdf nunca impidan que el lead llegue. Odoo lo encuentra por el
+   mismo ID de envío. */
+async function sendPdf(envioLead){
+  if (!(await envioLead) || !lead || lead.demo) return;
+  const envio = lead.envioId, nombre = pdfFilename();
   try {
     const blob = await buildPDFBlob();
-    pdfBase64 = await new Promise((resolve, reject) => {
+    const pdfBase64 = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result.split(',')[1]);
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
+    await enviarAOdoo({ origen: 'marketing-checkup', tipo: 'pdf', envio, pdf_nombre: nombre, pdf_base64: pdfBase64 });
   } catch (err) {
-    console.error('[Bosco Checkup] No se pudo generar el PDF:', err);
+    console.error('[Bosco Checkup] No se pudo generar o enviar el PDF:', err);
   }
+}
 
-  const payload = {
-    access_key: WEB3FORMS_ACCESS_KEY,
-    subject: `Marketing Checkup: ${lead.company} (${total}/100)`,
-    from_name: 'Bosco Marketing Checkup',
-    email: REPORT_RECIPIENT,
-    replyto: lead.email,
-    message: summary
-  };
-  if (pdfBase64) payload.attachments = [{ name: pdfFilename(), data: pdfBase64 }];
-
-  const submit = async body => {
-    const res = await fetch('https://api.web3forms.com/submit', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json', 'Accept':'application/json' },
-      body: JSON.stringify(body)
-    });
-    return res.json().catch(() => ({ success:false, status:res.status }));
-  };
-
-  try {
-    let data = await submit(payload);
-    /* Si Web3Forms rechaza el adjunto (tamaño o plan), reenviamos sin PDF:
-       lo importante es que el lead llegue al correo. */
-    if (!data.success && payload.attachments){
-      console.warn('[Bosco Checkup] Web3Forms rechazó el envío con PDF, se reintenta sin adjunto:', data);
-      const { attachments, ...plain } = payload;
-      plain.message += '\n\n(El PDF no se pudo adjuntar a este correo.)';
-      data = await submit(plain);
-    }
-    if (data.success) say('✓ Reporte enviado. Un consultor lo revisará antes de tu sesión.', 'ok');
-    else { console.error('[Bosco Checkup] Web3Forms:', data); say('No pudimos enviar la copia. Descarga tu PDF arriba.', 'err'); }
-  } catch (err) {
-    console.error('[Bosco Checkup] Falló el envío:', err);
-    say('No pudimos enviar la copia. Descarga tu PDF arriba.', 'err');
-  }
+/* keepalive deja terminar el envío aunque cierren la pestaña, pero el
+   navegador lo limita a 64 KB: el PDF va sin él. */
+function enviarAOdoo(datos, keepalive){
+  const body = JSON.stringify(datos);
+  return fetch(ODOO_WEBHOOK_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    keepalive: !!keepalive && body.length < 60000,
+    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+    body
+  });
 }
 
 /* Radar de 6 ejes — SVG puro, sin librerías */
@@ -2017,6 +2052,7 @@ if (location.hash === '#demo'){
   /* Cargó la herramienta. Es el denominador del embudo: cuánta gente
      llegó a ver el diagnóstico, hayan interactuado o no. */
   trackCheckupEvent('CheckupView');
+  pedirAtribucion();
   go(0);
 }
 </script>
